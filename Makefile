@@ -1,7 +1,7 @@
 # Image URL to use in all building/pushing image targets
 ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-VERSION ?= "local"
-REPO ?= "cinple"
+VERSION ?= local
+REPO ?= cinple
 PUBLISH_IMG ?= ${REPO}/varnish-operator:${VERSION}
 IMG ?= ${PUBLISH_IMG}-dev
 VARNISH_PUBLISH_IMG ?= varnish:${VERSION}
