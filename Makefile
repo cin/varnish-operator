@@ -19,7 +19,7 @@ all: test varnish-operator varnish-controller
 
 # Run tests
 test: generate fmt vet manifests
-	go test github.com/ibm/varnish-operator/pkg/... github.com/ibm/varnish-operator/cmd/... github.com/ibm/varnish-operator/api/... -coverprofile cover.out
+	go test github.com/cin/varnish-operator/pkg/... github.com/cin/varnish-operator/cmd/... github.com/cin/varnish-operator/api/... -coverprofile cover.out
 
 # Run lint tools
 lint:
@@ -27,7 +27,7 @@ lint:
 
 # Build varnish-operator binary
 varnish-operator: generate fmt vet
-	go build -o ${ROOT_DIR}bin/varnish-operator github.com/ibm/varnish-operator/cmd/varnish-operator
+	go build -o ${ROOT_DIR}bin/varnish-operator github.com/cin/varnish-operator/cmd/varnish-operator
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet
@@ -140,7 +140,7 @@ docker-tag-push-pod: docker-tag-push-varnish docker-tag-push-varnish-exporter do
 # download controller-gen if necessary
 controller-gen:
 ifeq (, $(shell which controller-gen))
-	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.1
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.3
 CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)

@@ -3,7 +3,7 @@
 Requirements:
 
 * Kubernetes 1.21 or newer. You can use [minikube](https://kubernetes.io/docs/setup/minikube/) for local development.
-* Go 1.19+
+* Go 1.20+
 * [Kubebuilder](https://kubebuilder.io/quick-start.html#installation) 2.0.0+
 * [kustomize](https://github.com/kubernetes-sigs/kustomize) 3.1.0+
 * [helm](https://helm.sh/) v2.14.3+
@@ -27,7 +27,7 @@ The main packages for both components can be found in the `cmd/` folder.
 
 ### Developing the operator
 ```bash
-$ git clone https://github.com/ibm/varnish-operator.git
+$ git clone https://github.com/cin/varnish-operator.git
 $ cd varnish-operator
 $ go mod download
 ```

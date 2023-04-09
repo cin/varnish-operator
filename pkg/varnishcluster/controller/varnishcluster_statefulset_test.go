@@ -7,7 +7,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	vcapi "github.com/ibm/varnish-operator/api/v1alpha1"
+	vcapi "github.com/cin/varnish-operator/api/v1alpha1"
 
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo/v2"
