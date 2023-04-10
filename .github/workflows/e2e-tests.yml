@@ -12,7 +12,7 @@ jobs:
         id: prep
         run: |
           repo=cinple
-          if [[ -n "${{ secrets.DOCKERHUB_REPO }}"" ]]; then
+          if [[ -n "${{ secrets.DOCKERHUB_REPO }}" ]]; then
             repo=${{ secrets.DOCKERHUB_REPO }}
           fi
           echo "::set-output name=dockerhub_repo::${repo}";
