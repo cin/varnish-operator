@@ -15,17 +15,13 @@ jobs:
           if [[ -n "${{ secrets.DOCKERHUB_REPO }}" ]]; then
             repo=${{ secrets.DOCKERHUB_REPO }}
           fi
-          echo "::set-output name=dockerhub_repo::${repo}";
-    outputs:
-      dockerhub_repo: ${{ steps.prep.outputs.dockerhub_repo }}
+          echo "dockerhub_repo=$repo" >> $GITHUB_ENV
 
   end-to-end:
     name: End to end tests
     runs-on: ubuntu-latest
     needs:
       - prepare
-    env:
-      DOCKERHUB_REPO: ${{ needs.prep.outputs.dockerhub_repo }}
     strategy:
       fail-fast: false
       matrix:
@@ -50,6 +46,7 @@ jobs:
         run: go mod download
       - name: build images
         run: |
+          which parallel
           docker build --platform linux/amd64 -f Dockerfile -t ${{ env.DOCKERHUB_REPO }}/varnish-operator:local .
           docker build --platform linux/amd64 -f Dockerfile.varnishd -t ${{ env.DOCKERHUB_REPO }}/varnish:local .
           docker build --platform linux/amd64 -f Dockerfile.controller -t ${{ env.DOCKERHUB_REPO }}/varnish-controller:local .
@@ -71,7 +68,7 @@ jobs:
           kind load --name e2e-tests docker-image ${{ env.DOCKERHUB_REPO }}/varnish-metrics-exporter:local
       - name: install operator
         id: helm
-        run: helm install varnish-operator --debug --namespace=varnish-operator varnish-operator --wait --set container.imagePullPolicy=Never --set container.image=${{ steps.prepare-step.outputs.dockerhub_repo }}/varnish-operator:local
+        run: helm install varnish-operator --debug --namespace=varnish-operator varnish-operator --wait --set container.imagePullPolicy=Never --set container.image=${{ env.DOCKERHUB_REPO }}/varnish-operator:local
       - name: run tests
         id: e2e
         run: go test -count=1 ./tests #-count=1 is to disable tests caching.
