@@ -46,7 +46,6 @@ jobs:
         run: go mod download
       - name: build images
         run: |
-          which parallel
           docker build --platform linux/amd64 -f Dockerfile -t ${{ env.DOCKERHUB_REPO }}/varnish-operator:local .
           docker build --platform linux/amd64 -f Dockerfile.varnishd -t ${{ env.DOCKERHUB_REPO }}/varnish:local .
           docker build --platform linux/amd64 -f Dockerfile.controller -t ${{ env.DOCKERHUB_REPO }}/varnish-controller:local .
