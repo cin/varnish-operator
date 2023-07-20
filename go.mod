@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/docker/distribution v2.8.1+incompatible
+	github.com/docker/distribution v2.8.2+incompatible
 	github.com/go-logr/zapr v1.2.3
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.5.9
