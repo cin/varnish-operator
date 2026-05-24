@@ -62,6 +62,20 @@ func getMetricByLabel(metricFamilies map[string]*prometheusClient.MetricFamily, 
 	return nil, false
 }
 
+// metricNumericValue returns the value of a counter or gauge metric.
+func metricNumericValue(metric *prometheusClient.Metric) (float64, bool) {
+	if metric == nil {
+		return 0, false
+	}
+	if metric.Gauge != nil {
+		return *metric.Gauge.Value, true
+	}
+	if metric.Counter != nil {
+		return *metric.Counter.Value, true
+	}
+	return 0, false
+}
+
 func getPodLogs(pod v1.Pod, podLogOpts v1.PodLogOptions) (string, error) {
 	req := kubeClient.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
 	podLogs, err := req.Stream(context.Background())
