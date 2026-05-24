@@ -8,15 +8,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup-go installation
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: ^1.20
+          go-version: "1.26"
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          args: --timeout=2m --enable exportloopref
+          args: --timeout=2m
           skip-pkg-cache: true
           skip-build-cache: true
   tests:
@@ -24,19 +24,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v5
       with:
-        go-version: ^1.20
+        go-version: "1.26"
       id: go
-    - name: Setup Kubebuilder assets
+    - name: Setup envtest binaries
       run: |
-        curl -sSLo envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-1.24.2-linux-amd64.tar.gz"
-        mkdir -p /tmp/kubebuilder
-        tar -C /tmp/kubebuilder/ --strip-components=1 -zvxf envtest-bins.tar.gz
-        rm envtest-bins.tar.gz;
-        echo "KUBEBUILDER_ASSETS=/tmp/kubebuilder/bin" >> $GITHUB_ENV
+        go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+        KUBEBUILDER_ASSETS="$(setup-envtest use 1.36.0 -p path)"
+        echo "KUBEBUILDER_ASSETS=${KUBEBUILDER_ASSETS}" >> $GITHUB_ENV
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Get dependencies
       run: go mod download
     - name: Unit tests

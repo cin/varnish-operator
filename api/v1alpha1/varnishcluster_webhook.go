@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -10,9 +11,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var webhookLogger = &logger.Logger{SugaredLogger: zap.NewNop().Sugar()}
@@ -44,61 +44,59 @@ func init() {
 }
 
 func (vc *VarnishCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(vc).
+	return ctrl.NewWebhookManagedBy(mgr, &VarnishCluster{}).
+		WithDefaulter(&VarnishCluster{}).
+		WithValidator(&VarnishCluster{}).
 		Complete()
 }
 
 // +kubebuilder:webhook:path=/mutate-caching-ibm-com-v1alpha1-varnishcluster,mutating=true,failurePolicy=fail,groups=caching.ibm.com,resources=varnishclusters,verbs=create;update,versions=v1alpha1,name=mvarnishcluster.kb.io
 
-var _ webhook.Defaulter = &VarnishCluster{}
-
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (vc *VarnishCluster) Default() {
+// Default implements admission.Defaulter so a webhook will be registered for the type
+func (vc *VarnishCluster) Default(ctx context.Context, obj *VarnishCluster) error {
 	logr := webhookLogger.With(logger.FieldComponent, VarnishComponentMutatingWebhook)
-	logr = logr.With(logger.FieldNamespace, vc.Namespace)
-	logr = logr.With(logger.FieldVarnishCluster, vc.Name)
+	logr = logr.With(logger.FieldNamespace, obj.Namespace)
+	logr = logr.With(logger.FieldVarnishCluster, obj.Name)
 	logr.Debug("Mutating webhook has been called")
 
 	var defaultReplicasNumber int32 = 1
-	if vc.Spec.Replicas == nil {
-		vc.Spec.Replicas = &defaultReplicasNumber
+	if obj.Spec.Replicas == nil {
+		obj.Spec.Replicas = &defaultReplicasNumber
 	}
+	return nil
 }
 
 // note: change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 // +kubebuilder:webhook:verbs=create;update,path=/validate-caching-ibm-com-v1alpha1-varnishcluster,mutating=false,failurePolicy=fail,groups=caching.ibm.com,resources=varnishclusters,versions=v1alpha1,name=vvarnishcluster.kb.io
 
-var _ webhook.Validator = &VarnishCluster{}
-
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (vc *VarnishCluster) ValidateCreate() error {
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type
+func (vc *VarnishCluster) ValidateCreate(ctx context.Context, obj *VarnishCluster) (admission.Warnings, error) {
 	logr := webhookLogger.With(logger.FieldComponent, VarnishComponentValidatingWebhook)
-	logr = logr.With(logger.FieldNamespace, vc.Namespace)
-	logr = logr.With(logger.FieldVarnishCluster, vc.Name)
+	logr = logr.With(logger.FieldNamespace, obj.Namespace)
+	logr = logr.With(logger.FieldVarnishCluster, obj.Name)
 
 	logr.Debug("Validating webhook has been called on create request")
-	return validateCreateUpdate(vc)
+	return nil, validateCreateUpdate(obj)
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (vc *VarnishCluster) ValidateUpdate(old runtime.Object) error {
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type
+func (vc *VarnishCluster) ValidateUpdate(ctx context.Context, oldObj, newObj *VarnishCluster) (admission.Warnings, error) {
 	logr := webhookLogger.With(logger.FieldComponent, VarnishComponentValidatingWebhook)
-	logr = logr.With(logger.FieldNamespace, vc.Namespace)
-	logr = logr.With(logger.FieldVarnishCluster, vc.Name)
+	logr = logr.With(logger.FieldNamespace, newObj.Namespace)
+	logr = logr.With(logger.FieldVarnishCluster, newObj.Name)
 
 	logr.Debug("Validating webhook has been called on update request")
-	return validateCreateUpdate(vc)
+	return nil, validateCreateUpdate(newObj)
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (vc *VarnishCluster) ValidateDelete() error {
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type
+func (vc *VarnishCluster) ValidateDelete(ctx context.Context, obj *VarnishCluster) (admission.Warnings, error) {
 	logr := webhookLogger.With(logger.FieldComponent, VarnishComponentValidatingWebhook)
-	logr = logr.With(logger.FieldNamespace, vc.Namespace)
-	logr = logr.With(logger.FieldVarnishCluster, vc.Name)
+	logr = logr.With(logger.FieldNamespace, obj.Namespace)
+	logr = logr.With(logger.FieldVarnishCluster, obj.Name)
 
 	logr.Debug("Validating webhook has been called on delete request")
-	return nil
+	return nil, nil
 }
 
 func validateCreateUpdate(vc *VarnishCluster) error {

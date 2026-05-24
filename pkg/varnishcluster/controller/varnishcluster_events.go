@@ -3,7 +3,7 @@ package controller
 import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
+	kubeEvents "k8s.io/client-go/tools/events"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 type EventReason string
 
 // NewEventHandler creates a new event handler that will use the specified recorder
-func NewEventHandler(recorder record.EventRecorder) *EventHandler {
+func NewEventHandler(recorder kubeEvents.EventRecorder) *EventHandler {
 	return &EventHandler{
 		Recorder: recorder,
 	}
@@ -25,15 +25,15 @@ func NewEventHandler(recorder record.EventRecorder) *EventHandler {
 
 // EventHandler handles the operations for events
 type EventHandler struct {
-	Recorder record.EventRecorder
+	Recorder kubeEvents.EventRecorder
 }
 
 // Warning creates a 'warning' type event
 func (e *EventHandler) Warning(object runtime.Object, reason EventReason, message string) {
-	e.Recorder.Event(object, v1.EventTypeWarning, string(reason), message)
+	e.Recorder.Eventf(object, nil, v1.EventTypeWarning, string(reason), "Reconcile", message)
 }
 
 // Normal creates a 'normal' type event
 func (e *EventHandler) Normal(object runtime.Object, reason EventReason, message string) {
-	e.Recorder.Event(object, v1.EventTypeNormal, string(reason), message)
+	e.Recorder.Eventf(object, nil, v1.EventTypeNormal, string(reason), "Reconcile", message)
 }

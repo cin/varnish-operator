@@ -122,7 +122,7 @@ func TestReloadCommand(t *testing.T) {
 
 func TestEnsureNotNilDefaultExecCommandProvider(t *testing.T) {
 	c := execCommandProvider("echo", "hello", "world")
-	if c == nil || (reflect.ValueOf(c).Kind() == reflect.Ptr && reflect.ValueOf(c).IsNil()) {
+	if c == nil || (reflect.ValueOf(c).Kind() == reflect.Pointer && reflect.ValueOf(c).IsNil()) {
 		t.Error("Unexpected nil for default execution command")
 	}
 }

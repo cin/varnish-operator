@@ -2,7 +2,6 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: varnish-operator
 rules:
 - apiGroups:
@@ -36,6 +35,7 @@ rules:
   resources:
   - nodes
   verbs:
+  - get
   - list
   - watch
 - apiGroups:
@@ -92,13 +92,6 @@ rules:
   - caching.ibm.com
   resources:
   - varnishclusters/finalizers
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - caching.ibm.com
-  resources:
   - varnishclusters/status
   verbs:
   - get
@@ -115,6 +108,14 @@ rules:
   - list
   - update
   - watch
+- apiGroups:
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
 - apiGroups:
   - monitoring.coreos.com
   resources:

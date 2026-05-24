@@ -7,11 +7,12 @@ import (
 	"github.com/cin/varnish-operator/pkg/logger"
 	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
-var _ predicate.Predicate = &LabelMatcherPredicate{}
+var _ predicate.Predicate = &varnishClusterPredicate{}
 
 type varnishClusterPredicate struct {
 	uuid   types.UID
@@ -28,7 +29,7 @@ func NewVarnishClusterPredicate(uuid types.UID, logr *logger.Logger) predicate.P
 	}
 }
 
-func (p *varnishClusterPredicate) Create(e event.CreateEvent) bool {
+func (p *varnishClusterPredicate) Create(e event.TypedCreateEvent[client.Object]) bool {
 	vc, ok := e.Object.(*v1alpha1.VarnishCluster)
 	if !ok {
 		return true
@@ -41,18 +42,24 @@ func (p *varnishClusterPredicate) Create(e event.CreateEvent) bool {
 	return true
 }
 
-func (p *varnishClusterPredicate) Delete(e event.DeleteEvent) bool {
+func (p *varnishClusterPredicate) Delete(e event.TypedDeleteEvent[client.Object]) bool {
 	_, ok := e.Object.(*v1alpha1.VarnishCluster)
 	return ok
 }
 
-func (p *varnishClusterPredicate) Update(e event.UpdateEvent) bool {
+func (p *varnishClusterPredicate) Update(e event.TypedUpdateEvent[client.Object]) bool {
 	if reflect.TypeOf(e.ObjectNew) != reflect.TypeOf(e.ObjectOld) {
 		return false
 	}
 
-	newCluster := e.ObjectNew.(*v1alpha1.VarnishCluster)
-	oldCluster := e.ObjectOld.(*v1alpha1.VarnishCluster)
+	newCluster, ok := e.ObjectNew.(*v1alpha1.VarnishCluster)
+	if !ok {
+		return false
+	}
+	oldCluster, ok := e.ObjectOld.(*v1alpha1.VarnishCluster)
+	if !ok {
+		return false
+	}
 	if e.ObjectNew.GetUID() != p.uuid || e.ObjectOld.GetUID() != p.uuid {
 		return false
 	}
@@ -68,7 +75,7 @@ func (p *varnishClusterPredicate) Update(e event.UpdateEvent) bool {
 	return true
 }
 
-func (p *varnishClusterPredicate) Generic(e event.GenericEvent) bool {
+func (p *varnishClusterPredicate) Generic(e event.TypedGenericEvent[client.Object]) bool {
 	vc, ok := e.Object.(*v1alpha1.VarnishCluster)
 	if !ok {
 		return true

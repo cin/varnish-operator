@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"testing"
 )
 
@@ -79,17 +80,17 @@ func TestValidatingWebhook(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		err := c.vc.ValidateCreate()
+		_, err := c.vc.ValidateCreate(context.Background(), c.vc)
 		if c.valid != (err == nil) {
 			t.Fatalf("Test %q failed for Create: Expected to be valid: %t, Actual error: %#v", c.name, c.valid, err)
 		}
 
-		err = c.vc.ValidateUpdate(&VarnishCluster{})
+		_, err = c.vc.ValidateUpdate(context.Background(), &VarnishCluster{}, c.vc)
 		if c.valid != (err == nil) {
 			t.Fatalf("Test %q failed for Update: Expected to be valid: %t, Actual error: %#v", c.name, c.valid, err)
 		}
 
-		err = c.vc.ValidateDelete()
+		_, err = c.vc.ValidateDelete(context.Background(), c.vc)
 		if err != nil {
 			t.Fatalf("Test %q failed for Delete: the delete validationg webhook should allow any requests", c.name)
 		}

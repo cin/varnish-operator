@@ -74,5 +74,5 @@ func (r *ReconcileVarnish) reconcileVarnish(ctx context.Context, vc *v1alpha1.Va
 
 // creates the VarnishClusterVCL config name from config map version
 func createVCLConfigName(configMapVersion string) string {
-	return fmt.Sprintf("%s%s-%d", VCLVersionPrefix, configMapVersion, time.Now().Unix())
+	return fmt.Sprintf("%s%s-%d", VCLVersionPrefix, configMapVersion, time.Now().UnixNano())
 }

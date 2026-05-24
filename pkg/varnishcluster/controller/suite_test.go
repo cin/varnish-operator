@@ -38,13 +38,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	rbac "k8s.io/api/rbac/v1"
+	schedulingv1 "k8s.io/api/scheduling/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -119,7 +120,7 @@ var _ = BeforeSuite(func() {
 		logger:             logr,
 		scheme:             scheme.Scheme,
 		Client:             k8sClient,
-		events:             NewEventHandler(&record.FakeRecorder{Events: make(chan string)}),
+		events:             NewEventHandler(events.NewFakeRecorder(100)),
 		config:             operatorConfig,
 		reconcileTriggerer: vcreconcile.NewReconcileTriggerer(logr, reconcileChan),
 	}
@@ -229,4 +230,5 @@ func CleanUpCreatedResources(vcName, vcNamespace string) {
 	Expect(err).To(BeNil())
 	err = k8sClient.DeleteAllOf(context.Background(), &v1.Secret{}, client.InNamespace(vcNamespace))
 	Expect(err).To(haveNoErrorOrNotFoundError)
+	_ = k8sClient.Delete(context.Background(), &schedulingv1.PriorityClass{ObjectMeta: metav1.ObjectMeta{Name: "test-priorityclass"}})
 }

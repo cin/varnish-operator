@@ -14,6 +14,13 @@ NAMESPACE ?= "default"
 CRD_OPTIONS ?= "crd:crdVersions=v1"
 PLATFORM ?= "linux/amd64"
 
+# operator-sdk generate bundle requires semver; VERSION=local is fine for images but not for bundles.
+ifeq ($(VERSION),local)
+BUNDLE_VERSION ?= 0.0.0-local
+else
+BUNDLE_VERSION ?= $(VERSION)
+endif
+
 # all: test varnish-operator
 all: test varnish-operator varnish-controller
 
@@ -50,8 +57,12 @@ manifests:
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=varnish-operator paths="./..." output:crd:none output:rbac:stdout > $(ROOT_DIR)varnish-operator/templates/clusterrole.yaml
 
 # Run goimports against code
-fmt:
-	cd ${ROOT_DIR} && goimports -w ./pkg ./cmd ./api
+GOIMPORTS = $(shell pwd)/bin/goimports
+goimports:
+	$(call go-get-tool,$(GOIMPORTS),golang.org/x/tools/cmd/goimports@v0.45.0)
+
+fmt: goimports
+	cd ${ROOT_DIR} && $(GOIMPORTS) -w ./pkg ./cmd ./api
 
 # Run go vet against code
 vet:
@@ -126,23 +137,33 @@ docker-tag-push-pod: docker-tag-push-varnish docker-tag-push-varnish-exporter do
 
 # find or download controller-gen
 # download controller-gen if necessary
+CONTROLLER_GEN ?= $(shell go env GOPATH)/bin/controller-gen
+
 controller-gen:
-ifeq (, $(shell which controller-gen))
-	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.3
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
+	@test -s $(CONTROLLER_GEN) || go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.21.0
 
 e2e-tests:
-	sh $(ROOT_DIR)hack/create_dev_cluster.sh
+	bash $(ROOT_DIR)hack/create_dev_cluster.sh
 	KUBECONFIG=$(ROOT_DIR)e2e-tests-kubeconfig go test ./tests
-	sh $(ROOT_DIR)hack/delete_dev_cluster.sh
+	bash $(ROOT_DIR)hack/delete_dev_cluster.sh
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize:
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5@v5.8.1)
 
+# go-get-tool fetches a tool binary via `go install` into the project bin directory.
+define go-get-tool
+@[ -f $(1) ] || { \
+set -e; \
+TMP_DIR=$$(mktemp -d); \
+cd $$TMP_DIR; \
+go mod init tmp; \
+GOBIN=$(shell pwd)/bin go install $(2); \
+rm -rf $$TMP_DIR; \
+}
+endef
+
+# operator-sdk v1.42.x is required for bundle generation (install separately).
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
 bundle: manifests kustomize
@@ -151,7 +172,8 @@ bundle: manifests kustomize
 	yq -i '.metadata.annotations.createdAt = now' config/manifests/bases/varnish-operator.clusterserviceversion.yaml
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(PUBLISH_IMG)
-	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS)
 	operator-sdk bundle validate ./bundle
 	cp Dockerfile.bundle ./bundle/Dockerfile
+	rm -rf ./$(VERSION)
 	mv ./bundle ./$(VERSION)

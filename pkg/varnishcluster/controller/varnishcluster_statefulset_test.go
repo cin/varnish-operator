@@ -12,6 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	schedulingv1 "k8s.io/api/scheduling/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -231,11 +232,17 @@ var _ = Describe("statefulset", func() {
 	})
 	Context("when varnishcluster is created with priorityClassName enable", func() {
 		It("should be created with corresponding PriorityClassName set", func() {
+			priorityClass := "test-priorityclass"
+			err := k8sClient.Create(context.Background(), &schedulingv1.PriorityClass{
+				ObjectMeta: metav1.ObjectMeta{Name: priorityClass},
+				Value:      1000,
+			})
+			Expect(err).ToNot(HaveOccurred())
+
 			newVC := vc.DeepCopy()
-			priorityClass := "test-priorityClass"
 			newVC.Spec.PriorityClassName = priorityClass
 
-			err := k8sClient.Create(context.Background(), newVC)
+			err = k8sClient.Create(context.Background(), newVC)
 			Expect(err).ToNot(HaveOccurred())
 
 			sts := &apps.StatefulSet{}
@@ -263,7 +270,7 @@ var _ = Describe("statefulset", func() {
 						AccessModes: []v1.PersistentVolumeAccessMode{
 							v1.ReadWriteOnce,
 						},
-						Resources: v1.ResourceRequirements{
+						Resources: v1.VolumeResourceRequirements{
 							Requests: map[v1.ResourceName]resource.Quantity{
 								v1.ResourceStorage: resource.MustParse("30Gi"),
 							},

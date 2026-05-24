@@ -31,7 +31,7 @@ func (r *ReconcileVarnishCluster) reconcileClusterRole(ctx context.Context, inst
 			{
 				APIGroups: []string{""},
 				Resources: []string{"nodes"},
-				Verbs:     []string{"list", "watch"},
+				Verbs:     []string{"get", "list", "watch"},
 			},
 			{
 				APIGroups: []string{""},

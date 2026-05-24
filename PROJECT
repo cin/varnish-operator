@@ -1,5 +1,6 @@
 domain: ibm.com
-layout: go.kubebuilder.io/v3
+layout:
+- go.kubebuilder.io/v4
 projectName: varnish-operator
 repo: github.com/cin/varnish-operator
 resources:

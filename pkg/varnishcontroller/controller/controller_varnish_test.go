@@ -53,19 +53,7 @@ type eventsObserver struct {
 	eventsObserved bool
 }
 
-func (e *eventsObserver) Event(object runtime.Object, eventtype, reason, message string) {
-	e.eventsObserved = true
-}
-
-func (e *eventsObserver) Eventf(object runtime.Object, eventtype, reason, messageFmt string, args ...interface{}) {
-	e.eventsObserved = true
-}
-
-func (e *eventsObserver) PastEventf(object runtime.Object, timestamp metav1.Time, eventtype, reason, messageFmt string, args ...interface{}) {
-	e.eventsObserved = true
-}
-
-func (e *eventsObserver) AnnotatedEventf(object runtime.Object, annotations map[string]string, eventtype, reason, messageFmt string, args ...interface{}) {
+func (e *eventsObserver) Eventf(regarding runtime.Object, related runtime.Object, eventtype, reason, action, note string, args ...interface{}) {
 	e.eventsObserved = true
 }
 

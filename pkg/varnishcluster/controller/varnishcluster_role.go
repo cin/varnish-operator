@@ -36,6 +36,11 @@ func (r *ReconcileVarnishCluster) reconcileRole(ctx context.Context, instance *v
 				Resources: []string{"events"},
 				Verbs:     []string{"create", "patch"},
 			},
+			{
+				APIGroups: []string{"events.k8s.io"},
+				Resources: []string{"events"},
+				Verbs:     []string{"create", "patch", "update"},
+			},
 		},
 	}
 

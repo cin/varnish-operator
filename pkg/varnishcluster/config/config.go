@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/caarlos0/env/v6"
-	dockerref "github.com/docker/distribution/reference"
+	"github.com/caarlos0/env/v11"
+	"github.com/distribution/reference"
 	"github.com/pkg/errors"
 	"go.uber.org/zap/zapcore"
 )
@@ -54,28 +54,28 @@ var (
 // LoadConfig uses the env library to read in environment variables and return an instance of Config
 func LoadConfig() (*Config, error) {
 	c := Config{}
-	if err := env.ParseWithFuncs(&c, parseFuncMap); err != nil {
+	if err := env.ParseWithOptions(&c, env.Options{FuncMap: parseFuncMap}); err != nil {
 		return &c, errors.WithStack(err)
 	}
 
-	ref, err := dockerref.Parse(c.ContainerImage)
+	ref, err := reference.Parse(c.ContainerImage)
 	if err != nil {
 		return &c, errors.Wrap(err, "image is not properly formatted")
 	}
-	nt, ok := ref.(dockerref.NamedTagged)
+	nt, ok := ref.(reference.NamedTagged)
 	if !ok {
 		return &c, errors.New("image name does not include tag")
 	}
-	repo := nt.Name()
+	repo := reference.TrimNamed(nt).Name()
 	if idx := strings.LastIndexByte(repo, '/'); idx != -1 {
 		repo = repo[:idx] // chop off `/<image-name>`
 	}
 
-	varnishImageName, err := dockerref.WithName(repo + "/varnish")
+	varnishImageName, err := reference.WithName(repo + "/varnish")
 	if err != nil {
 		return &c, errors.Wrap(err, "could not initialize varnish image name")
 	}
-	varnishImage, err := dockerref.WithTag(varnishImageName, nt.Tag())
+	varnishImage, err := reference.WithTag(varnishImageName, nt.Tag())
 	if err != nil {
 		return &c, errors.Wrap(err, "could not include tag to varnish image name")
 	}
