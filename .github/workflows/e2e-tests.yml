@@ -9,11 +9,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - kubernetes-version: "1.34.3"
-          - kubernetes-version: "1.35.1"
-          - kubernetes-version: "1.36.0"
-            build-node-image: true
+        kubernetes-version:
+          - "1.34.3"
+          - "1.35.1"
     steps:
       - name: Prep
         id: prep
@@ -37,15 +35,13 @@ jobs:
           docker build --platform linux/amd64 -f Dockerfile.varnishd -t ${{ env.DOCKERHUB_REPO }}/varnish:local .
           docker build --platform linux/amd64 -f Dockerfile.controller -t ${{ env.DOCKERHUB_REPO }}/varnish-controller:local .
           docker build --platform linux/amd64 -f Dockerfile.exporter -t ${{ env.DOCKERHUB_REPO }}/varnish-metrics-exporter:local .
-      - name: Build kind node image for Kubernetes ${{ matrix.kubernetes-version }}
-        if: matrix.build-node-image
-        run: kind build node-image v${{ matrix.kubernetes-version }}
       - name: Create k8s Kind Cluster ${{ matrix.kubernetes-version }}
         uses: helm/kind-action@v1.12.0
         with:
           version: v0.29.0
           cluster_name: e2e-tests
           node_image: kindest/node:v${{ matrix.kubernetes-version }}
+          kubectl_version: v${{ matrix.kubernetes-version }}
           wait: 120s
       - name: create namespace
         run: kubectl create namespace varnish-operator

@@ -7,7 +7,7 @@ The project is in development and breaking changes can be introduced.
 
 The purpose of the project is to provide a convenient way to deploy and manage Varnish instances in Kubernetes.
 
-Kubernetes version `>=1.29.0` is supported (see the operator bundle `minKubeVersion`). CI tests against Kubernetes 1.34.3, 1.35.1, and 1.36.0.
+Kubernetes version `>=1.29.0` is supported (see the operator bundle `minKubeVersion`). CI tests against Kubernetes 1.34.3 and 1.35.1.
 
 Varnish version 6.5.1 is supported.
 

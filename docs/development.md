@@ -160,11 +160,11 @@ make lint       # golangci-lint
 
 ## Unit tests
 
-Controller tests use [envtest](https://book.kubebuilder.io/reference/envtest.html) (a local Kubernetes API server). Install setup-envtest and point `KUBEBUILDER_ASSETS` at the binaries matching the Kubernetes version you want (CI uses **1.36.0**):
+Controller tests use [envtest](https://book.kubebuilder.io/reference/envtest.html) (a local Kubernetes API server). Install setup-envtest and point `KUBEBUILDER_ASSETS` at the binaries matching the Kubernetes version you want (CI uses **1.35.1**):
 
 ```bash
 go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
-export KUBEBUILDER_ASSETS="$(setup-envtest use 1.36.0 -p path)"
+export KUBEBUILDER_ASSETS="$(setup-envtest use 1.35.1 -p path)"
 make test
 ```
 
@@ -186,7 +186,7 @@ Use a specific Kubernetes version (must be a valid `kindest/node` tag suffix, e.
 KUBERNETES_VERSION=1.35.1 make e2e-tests
 ```
 
-For versions without a pre-built image (such as `1.36.0`), the dev script builds the node image locally with `kind build node-image`.
+For versions without a pre-built `kindest/node` image, the dev script builds the node image locally with `kind build node-image`.
 
 The helper script builds images as `cinple/*:local` and sets `imagePullPolicy=Never` so kind can use locally built images.
 
@@ -204,7 +204,7 @@ Optional flags for `create_dev_cluster.sh`:
 * `-v` — create a sample `VarnishCluster`
 * `-b` — create nginx backend deployments
 
-CI runs e2e against Kubernetes **1.34.3**, **1.35.1**, and **1.36.0** (built locally in CI until a pre-built kind image is published).
+CI runs e2e against Kubernetes **1.34.3** and **1.35.1**.
 
 ## OperatorHub bundle generation
 
