@@ -14,13 +14,11 @@ jobs:
         with:
           go-version: "1.26"
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           # v1.x binaries are built with Go <1.26 and cannot lint go 1.26 modules
           version: v2.9.0
           args: --timeout=2m
-          skip-pkg-cache: true
-          skip-build-cache: true
   tests:
     name: Tests
     runs-on: ubuntu-latest
