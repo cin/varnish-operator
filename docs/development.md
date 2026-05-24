@@ -11,7 +11,7 @@ For installing a released build in a cluster, see [Installation](installation.md
 * **Docker** (or podman) for image builds and e2e tests
 * **Helm 3** for deploying the operator chart
 * **kind** v0.20+ for end-to-end tests
-* **golangci-lint** for `make lint`
+* **golangci-lint** v2.9+ for `make lint` (must be built with Go 1.26+ to match `go.mod`)
 * **operator-sdk** v1.42+ and **yq** for `make bundle` (installed separately)
 * **setup-envtest** for controller unit tests (see [Unit tests](#unit-tests))
 
