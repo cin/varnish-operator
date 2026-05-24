@@ -158,13 +158,29 @@ make vet        # go vet
 make lint       # golangci-lint
 ```
 
+## Kubernetes versions in tests
+
+Unit tests and end-to-end tests pin Kubernetes versions differently. **Do not reuse an e2e/kind version string for envtest** (or vice versa)—`setup-envtest use 1.35.1` fails with `unable to find archive` because envtest does not publish that tag.
+
+| | Unit tests | End-to-end tests |
+| --- | --- | --- |
+| **Tool** | [envtest](https://book.kubebuilder.io/reference/envtest.html) via `setup-envtest` | [kind](https://kind.sigs.k8s.io/) `kindest/node` images |
+| **Tag format** | Minor releases from [controller-tools envtest](https://github.com/kubernetes-sigs/controller-tools/releases) (e.g. `1.36.0`, `1.35.0`, `1.34.1`) | Patch tags published on Docker Hub (e.g. `1.35.1`, `1.34.3`) |
+| **CI versions** | **1.36.0** (matches `k8s.io/*` v0.36 in `go.mod`) | **1.34.3**, **1.35.1** |
+| **Pick a version** | `setup-envtest list --platform linux/amd64` | [kindest/node tags](https://hub.docker.com/r/kindest/node/tags) or `docker pull kindest/node:vX.Y.Z` |
+
+Why they differ:
+
+* **envtest** ships pre-built API server/etcd binaries per controller-tools release. Tags are sparse (often `X.Y.0` or `X.Y.1`), and newer tags may exist before a matching kind image is published.
+* **kind** needs a full node OCI image. CI only uses tags that exist on Docker Hub; unreleased versions (e.g. `1.36.0` at the time of writing) require `kind build node-image` locally via `hack/create_dev_cluster.sh`.
+
 ## Unit tests
 
-Controller tests use [envtest](https://book.kubebuilder.io/reference/envtest.html) (a local Kubernetes API server). Install setup-envtest and point `KUBEBUILDER_ASSETS` at the binaries matching the Kubernetes version you want (CI uses **1.35.1**):
+Controller tests use envtest (a local Kubernetes API server). Install setup-envtest and point `KUBEBUILDER_ASSETS` at the binaries for an envtest release (see [Kubernetes versions in tests](#kubernetes-versions-in-tests)):
 
 ```bash
 go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
-export KUBEBUILDER_ASSETS="$(setup-envtest use 1.35.1 -p path)"
+export KUBEBUILDER_ASSETS="$(setup-envtest use 1.36.0 -p path)"
 make test
 ```
 
@@ -180,7 +196,7 @@ make e2e-tests
 
 This runs `hack/create_dev_cluster.sh`, executes tests with `KUBECONFIG=./e2e-tests-kubeconfig`, then tears the cluster down.
 
-Use a specific Kubernetes version (must be a valid `kindest/node` tag suffix, e.g. `1.35.1`):
+Use a specific Kubernetes version (must be a valid `kindest/node` tag—see [Kubernetes versions in tests](#kubernetes-versions-in-tests)):
 
 ```bash
 KUBERNETES_VERSION=1.35.1 make e2e-tests
@@ -204,7 +220,7 @@ Optional flags for `create_dev_cluster.sh`:
 * `-v` — create a sample `VarnishCluster`
 * `-b` — create nginx backend deployments
 
-CI runs e2e against Kubernetes **1.34.3** and **1.35.1**.
+CI runs e2e against Kubernetes **1.34.3** and **1.35.1** (see [Kubernetes versions in tests](#kubernetes-versions-in-tests)).
 
 ## OperatorHub bundle generation
 
