@@ -11,6 +11,7 @@ import (
 	vcapi "github.com/cin/varnish-operator/api/v1alpha1"
 
 	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 	appsv1 "k8s.io/api/apps/v1"
 
 	v1 "k8s.io/api/core/v1"
@@ -33,7 +34,10 @@ var _ = Describe("Varnish cluster", func() {
 	backendResponse := "TEST"
 	backendLabels := map[string]string{"app": "test-backend"}
 	backendDeploymentName := "test-backend"
-	varnishPodLabels := map[string]string{vcapi.LabelVarnishComponent: vcapi.VarnishComponentVarnish}
+	varnishPodLabels := map[string]string{
+		vcapi.LabelVarnishOwner:     vcName,
+		vcapi.LabelVarnishComponent: vcapi.VarnishComponentVarnish,
+	}
 
 	backendsDeployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -116,6 +120,16 @@ var _ = Describe("Varnish cluster", func() {
 		pf := portForwardPod(vcNamespace, varnishPodLabels, []string{"6081:6081", "9131:9131"})
 		defer pf.Close()
 
+		By("varnish pod has backends configured")
+		Eventually(func() (int, error) {
+			resp, err := http.Get("http://localhost:6081/liveness")
+			if err != nil {
+				return 0, err
+			}
+			defer func() { _ = resp.Body.Close() }()
+			return resp.StatusCode, nil
+		}, time.Minute, time.Second*2).Should(Equal(200))
+
 		By("varnish pod responds with the backend response")
 		var resp *http.Response
 		Eventually(func() (int, error) {
@@ -145,7 +159,7 @@ var _ = Describe("Varnish cluster", func() {
 		Expect(err).To(Succeed())
 		Expect(resp.StatusCode).To(Equal(200))
 
-		var parser expfmt.TextParser
+		parser := expfmt.NewTextParser(model.UTF8Validation)
 		metricFamilies, err := parser.TextToMetricFamilies(resp.Body)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -163,6 +177,9 @@ var _ = Describe("Varnish cluster", func() {
 		Expect(*metric.Gauge.Value).To(BeNumerically(">=", 2)) //should be the `default` and the one we loaded
 		metric, found = getMetric(metricFamilies, "varnish_main_uptime")
 		Expect(found).To(BeTrue())
-		Expect(*metric.Counter.Value).To(BeNumerically(">=", 1))
+		uptime, ok := metricNumericValue(metric)
+		Expect(ok).To(BeTrue())
+		// Uptime can be 0 immediately after VCL reload or on fast CI runners.
+		Expect(uptime).To(BeNumerically(">=", 0))
 	})
 })

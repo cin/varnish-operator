@@ -2,11 +2,12 @@ package predicates
 
 import (
 	"github.com/cin/varnish-operator/pkg/logger"
+	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
-var _ predicate.Predicate = &NamespacesMatcherPredicate{}
+var _ predicate.TypedPredicate[*v1.Pod] = &NamespacesMatcherPredicate{}
 
 type NamespacesMatcherPredicate struct {
 	logger     *logger.Logger
@@ -23,19 +24,19 @@ func NewNamespacesMatcherPredicate(namespaces []string, logr *logger.Logger) *Na
 	}
 }
 
-func (p *NamespacesMatcherPredicate) Create(e event.CreateEvent) bool {
+func (p *NamespacesMatcherPredicate) Create(e event.TypedCreateEvent[*v1.Pod]) bool {
 	return p.allow(e.Object.GetNamespace())
 }
 
-func (p *NamespacesMatcherPredicate) Delete(e event.DeleteEvent) bool {
+func (p *NamespacesMatcherPredicate) Delete(e event.TypedDeleteEvent[*v1.Pod]) bool {
 	return p.allow(e.Object.GetNamespace())
 }
 
-func (p *NamespacesMatcherPredicate) Update(e event.UpdateEvent) bool {
+func (p *NamespacesMatcherPredicate) Update(e event.TypedUpdateEvent[*v1.Pod]) bool {
 	return p.allow(e.ObjectNew.GetNamespace())
 }
 
-func (p *NamespacesMatcherPredicate) Generic(e event.GenericEvent) bool {
+func (p *NamespacesMatcherPredicate) Generic(e event.TypedGenericEvent[*v1.Pod]) bool {
 	return p.allow(e.Object.GetNamespace())
 }
 

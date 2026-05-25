@@ -2,10 +2,30 @@
 
 set -ex
 
-kube_version="1.25.2" # see https://github.com/kubernetes-sigs/kind/releases for available Kubernetes versions
+kube_version="1.35.1" # see https://hub.docker.com/r/kindest/node/tags for published images
 if [ -n "${KUBERNETES_VERSION}" ]; then
   kube_version="${KUBERNETES_VERSION}"
 fi
+
+# Ensure kindest/node:v<version> exists locally; build if no pre-built image is published yet.
+function ensure_kind_node_image() {
+  local version="$1"
+  local image="kindest/node:v${version}"
+
+  if docker image inspect "${image}" >/dev/null 2>&1; then
+    echo "${image}"
+    return 0
+  fi
+
+  if docker pull "${image}" >/dev/null 2>&1; then
+    echo "${image}"
+    return 0
+  fi
+
+  echo "Pre-built ${image} not found; building locally with kind (may take a few minutes)..." >&2
+  kind build node-image "v${version}"
+  echo "${image}"
+}
 
 if ! which docker; then
     echo -e "Install docker first"
@@ -146,8 +166,9 @@ if [ "$dry_run" = true ]; then
 fi
 
 if [ "$manage_cluster" = true ]; then
+  kind_node_image="$(ensure_kind_node_image "${kube_version}")"
   kind delete cluster --name $cluster_name > /dev/null 2>&1
-  kind create cluster --name $cluster_name --image kindest/node:v$kube_version --kubeconfig ./e2e-tests-kubeconfig
+  kind create cluster --name $cluster_name --image "${kind_node_image}" --kubeconfig ./e2e-tests-kubeconfig
   export KUBECONFIG=./e2e-tests-kubeconfig
 fi
 

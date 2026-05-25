@@ -1,7 +1,9 @@
 namespace: varnish-operator
 namePrefix: varnish-operator-
 
-bases:
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../crd
 - ../rbac
 - ../manager

@@ -27,6 +27,7 @@ import (
 	"go.uber.org/zap"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
 // Version defines varnish-controller version. Will be overwritten by the correct version during docker build
@@ -73,9 +74,11 @@ func main() {
 	controllerMetrics.Registry.MustRegister(vMetrics.VCLCompilationError)
 
 	mgr, err := ctrl.NewManager(clientConfig, ctrl.Options{
-		Scheme:                 scheme,
+		Scheme: scheme,
+		Metrics: metricsserver.Options{
+			BindAddress: fmt.Sprintf(":%d", v1alpha1.VarnishControllerMetricsPort),
+		},
 		HealthProbeBindAddress: fmt.Sprintf(":%d", v1alpha1.HealthCheckPort),
-		MetricsBindAddress:     fmt.Sprintf(":%d", v1alpha1.VarnishControllerMetricsPort),
 	})
 
 	if err != nil {

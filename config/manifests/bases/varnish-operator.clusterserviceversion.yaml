@@ -6,8 +6,8 @@ metadata:
     capabilities: Full Lifecycle
     categories: Networking
     certified: "false"
-    containerImage: cinple/varnish-operator:0.27.2
-    createdAt: 2021-02-15T11:15:31+0000
+    containerImage: varnish-operator:local
+    createdAt: "2026-05-24T01:45:01-04:00"
     description: Run and manage Varnish clusters on Kubernetes
     repository: https://github.com/IBM/varnish-operator
     support: https://ibm.github.io/varnish-operator/
@@ -81,6 +81,7 @@ spec:
   - email: cingram@us.ibm.com
     name: Craig Ingram
   maturity: alpha
+  minKubeVersion: 1.29.0
   provider:
     name: IBM
     url: https://www.ibm.com/

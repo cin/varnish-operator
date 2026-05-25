@@ -27,39 +27,53 @@ import (
 )
 
 // getMetric returns the first metric in the specified metric family
-func getMetric(metricFamilies map[string]*prometheusClient.MetricFamily, metricName string) (prometheusClient.Metric, bool) {
+func getMetric(metricFamilies map[string]*prometheusClient.MetricFamily, metricName string) (*prometheusClient.Metric, bool) {
 	mf, found := metricFamilies[metricName]
 	if !found {
-		return prometheusClient.Metric{}, false
+		return nil, false
 	}
 
 	if mf.Name != nil && *mf.Name == metricName {
 		if len(mf.Metric) == 0 {
-			return prometheusClient.Metric{}, false
+			return nil, false
 		}
 
-		return *mf.Metric[0], true
+		return mf.Metric[0], true
 	}
-	return prometheusClient.Metric{}, false
+	return nil, false
 }
 
 // getMetricByLabel returns the first metric in the specified metric family that has the specified label and label value. The label value parameter is a substring.
-func getMetricByLabel(metricFamilies map[string]*prometheusClient.MetricFamily, metricName, labelName, labelValue string) (prometheusClient.Metric, bool) {
+func getMetricByLabel(metricFamilies map[string]*prometheusClient.MetricFamily, metricName, labelName, labelValue string) (*prometheusClient.Metric, bool) {
 	mf, found := metricFamilies[metricName]
 	if !found {
-		return prometheusClient.Metric{}, false
+		return nil, false
 	}
 
 	if mf.Name != nil && *mf.Name == metricName {
 		for _, metric := range mf.Metric {
 			for _, label := range metric.Label {
 				if *label.Name == labelName && strings.Contains(*label.Value, labelValue) {
-					return *metric, true
+					return metric, true
 				}
 			}
 		}
 	}
-	return prometheusClient.Metric{}, false
+	return nil, false
+}
+
+// metricNumericValue returns the value of a counter or gauge metric.
+func metricNumericValue(metric *prometheusClient.Metric) (float64, bool) {
+	if metric == nil {
+		return 0, false
+	}
+	if metric.Gauge != nil {
+		return *metric.Gauge.Value, true
+	}
+	if metric.Counter != nil {
+		return *metric.Counter.Value, true
+	}
+	return 0, false
 }
 
 func getPodLogs(pod v1.Pod, podLogOpts v1.PodLogOptions) (string, error) {

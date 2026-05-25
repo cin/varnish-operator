@@ -43,63 +43,56 @@ const (
 )
 
 func SetupVarnishReconciler(ctx context.Context, vcCtrl reconcile.Reconciler, mgr manager.Manager, reconcileChan chan event.GenericEvent) error {
-	clusterRoleBindingEventHandler := handler.EnqueueRequestsFromMapFunc(func(a client.Object) []ctrl.Request {
-		cr, ok := a.(*rbac.ClusterRoleBinding)
-		if !ok {
-			return nil
-		}
+	clusterRoleBindingEventHandler := handler.TypedEnqueueRequestsFromMapFunc(
+		func(_ context.Context, cr *rbac.ClusterRoleBinding) []reconcile.Request {
+			if cr.Annotations[annotationVarnishClusterNamespace] == "" {
+				return nil
+			}
 
-		if cr.Annotations[annotationVarnishClusterNamespace] == "" {
-			return nil
-		}
+			if cr.Annotations[annotationVarnishClusterName] == "" {
+				return nil
+			}
 
-		if cr.Annotations[annotationVarnishClusterName] == "" {
-			return nil
-		}
+			return []reconcile.Request{
+				{NamespacedName: types.NamespacedName{
+					Name:      cr.Annotations[annotationVarnishClusterName],
+					Namespace: cr.Annotations[annotationVarnishClusterNamespace],
+				}},
+			}
+		})
 
-		return []ctrl.Request{
-			{NamespacedName: types.NamespacedName{
-				Name:      cr.Annotations[annotationVarnishClusterName],
-				Namespace: cr.Annotations[annotationVarnishClusterNamespace],
-			}},
-		}
-	})
+	clusterRoleEventHandler := handler.TypedEnqueueRequestsFromMapFunc(
+		func(_ context.Context, cr *rbac.ClusterRole) []reconcile.Request {
+			if cr.Annotations[annotationVarnishClusterNamespace] == "" {
+				return nil
+			}
 
-	clusterRoleEventHandler := handler.EnqueueRequestsFromMapFunc(func(a client.Object) []ctrl.Request {
-		cr, ok := a.(*rbac.ClusterRole)
-		if !ok {
-			return nil
-		}
+			if cr.Annotations[annotationVarnishClusterName] == "" {
+				return nil
+			}
 
-		if cr.Annotations[annotationVarnishClusterNamespace] == "" {
-			return nil
-		}
-
-		if cr.Annotations[annotationVarnishClusterName] == "" {
-			return nil
-		}
-
-		return []ctrl.Request{
-			{NamespacedName: types.NamespacedName{
-				Name:      cr.Annotations[annotationVarnishClusterName],
-				Namespace: cr.Annotations[annotationVarnishClusterNamespace],
-			}},
-		}
-	})
+			return []reconcile.Request{
+				{NamespacedName: types.NamespacedName{
+					Name:      cr.Annotations[annotationVarnishClusterName],
+					Namespace: cr.Annotations[annotationVarnishClusterNamespace],
+				}},
+			}
+		})
 
 	vcPodsSelector := labels.SelectorFromSet(map[string]string{vcapi.LabelVarnishComponent: vcapi.VarnishComponentVarnish})
-	varnishClusterPodsEventHandler := handler.EnqueueRequestsFromMapFunc(func(a client.Object) []ctrl.Request {
-		if !vcPodsSelector.Matches(labels.Set(a.GetLabels())) {
-			return nil
-		}
+	varnishClusterPodsEventHandler := handler.TypedEnqueueRequestsFromMapFunc(
+		func(_ context.Context, pod *v1.Pod) []reconcile.Request {
+			if !vcPodsSelector.Matches(labels.Set(pod.GetLabels())) {
+				return nil
+			}
 
-		return []ctrl.Request{
-			{NamespacedName: types.NamespacedName{
-				Name:      a.GetLabels()[vcapi.LabelVarnishOwner],
-				Namespace: a.GetNamespace(),
-			}},
-		}
-	})
+			return []reconcile.Request{
+				{NamespacedName: types.NamespacedName{
+					Name:      pod.GetLabels()[vcapi.LabelVarnishOwner],
+					Namespace: pod.GetNamespace(),
+				}},
+			}
+		})
 
 	builder := ctrl.NewControllerManagedBy(mgr)
 	builder.Named("varnishcluster")
@@ -109,11 +102,11 @@ func SetupVarnishReconciler(ctx context.Context, vcCtrl reconcile.Reconciler, mg
 	builder.Owns(&v1.Service{})
 	builder.Owns(&rbac.Role{})
 	builder.Owns(&rbac.RoleBinding{})
-	builder.Watches(&source.Kind{Type: &rbac.ClusterRole{}}, clusterRoleEventHandler)
-	builder.Watches(&source.Kind{Type: &rbac.ClusterRoleBinding{}}, clusterRoleBindingEventHandler)
+	builder.WatchesRawSource(source.Kind(mgr.GetCache(), &rbac.ClusterRole{}, clusterRoleEventHandler))
+	builder.WatchesRawSource(source.Kind(mgr.GetCache(), &rbac.ClusterRoleBinding{}, clusterRoleBindingEventHandler))
 	builder.Owns(&v1.ServiceAccount{})
-	builder.Watches(&source.Channel{Source: reconcileChan}, &handler.EnqueueRequestForObject{})
-	builder.Watches(&source.Kind{Type: &v1.Pod{}}, varnishClusterPodsEventHandler)
+	builder.WatchesRawSource(source.Channel(reconcileChan, &handler.EnqueueRequestForObject{}))
+	builder.WatchesRawSource(source.Kind(mgr.GetCache(), &v1.Pod{}, varnishClusterPodsEventHandler))
 
 	serviceMonitorList := &unstructured.UnstructuredList{}
 	serviceMonitorList.SetGroupVersionKind(serviceMonitorListGVK)
@@ -152,7 +145,7 @@ func NewVarnishReconciler(mgr manager.Manager, cfg *config.Config, logr *logger.
 		logger:             logr,
 		config:             cfg,
 		scheme:             mgr.GetScheme(),
-		events:             NewEventHandler(mgr.GetEventRecorderFor(EventRecorderNameVarnishCluster)),
+		events:             NewEventHandler(mgr.GetEventRecorder(EventRecorderNameVarnishCluster)),
 		reconcileTriggerer: vcreconcile.NewReconcileTriggerer(logr, reconcileChan),
 	}
 }
@@ -168,8 +161,9 @@ func NewVarnishReconciler(mgr manager.Manager, cfg *config.Config, logr *logger.
 // +kubebuilder:rbac:groups="",resources=services;serviceaccounts,verbs=list;watch;create;update;delete
 // +kubebuilder:rbac:groups="",resources=endpoints;namespaces,verbs=list;watch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
+// +kubebuilder:rbac:groups=events.k8s.io,resources=events,verbs=create;patch;update
 // +kubebuilder:rbac:groups="",resources=pods,verbs=list;get;watch;update
-// +kubebuilder:rbac:groups="",resources=nodes,verbs=watch;list
+// +kubebuilder:rbac:groups="",resources=nodes,verbs=get;watch;list
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=list;watch;create;update;delete
 // +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=list;watch;create;update;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings;clusterroles;clusterrolebindings,verbs=list;watch;create;update;delete
@@ -183,7 +177,9 @@ func (r *ReconcileVarnishCluster) Reconcile(ctx context.Context, request ctrl.Re
 
 	logr.Debugw("Reconciling...")
 	start := time.Now()
-	defer logr.Debugf("Reconciled in %s", time.Since(start).String())
+	defer func() {
+		logr.Debugf("Reconciled in %s", time.Since(start))
+	}()
 	res, err := r.reconcileWithContext(ctx, request)
 	if err != nil {
 		if statusErr, ok := errors.Cause(err).(*kerrors.StatusError); ok && statusErr.ErrStatus.Reason == metav1.StatusReasonConflict {

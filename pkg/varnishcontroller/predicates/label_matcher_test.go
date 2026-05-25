@@ -16,13 +16,13 @@ func TestLabelMatcherPredicate_Update(t *testing.T) {
 	tcs := []struct {
 		name               string
 		selector           map[string]string
-		updateEvent        event.UpdateEvent
+		updateEvent        event.TypedUpdateEvent[*v1.Pod]
 		shouldTriggerEvent bool
 	}{
 		{
 			name:     "nothing changed",
 			selector: map[string]string{"app": "backend"},
-			updateEvent: event.UpdateEvent{
+			updateEvent: event.TypedUpdateEvent[*v1.Pod]{
 				ObjectOld: &v1.Pod{
 					ObjectMeta: v12.ObjectMeta{Name: "pod1", Labels: map[string]string{"app": "backend"}},
 					Spec:       v1.PodSpec{NodeName: "node1"},
@@ -39,7 +39,7 @@ func TestLabelMatcherPredicate_Update(t *testing.T) {
 		{
 			name:     "nothing significant changed",
 			selector: map[string]string{"app": "backend"},
-			updateEvent: event.UpdateEvent{
+			updateEvent: event.TypedUpdateEvent[*v1.Pod]{
 				ObjectOld: &v1.Pod{
 					ObjectMeta: v12.ObjectMeta{Name: "pod1", Labels: map[string]string{"app": "backend", "one": "two"}},
 					Spec:       v1.PodSpec{NodeName: "node1"},
@@ -56,7 +56,7 @@ func TestLabelMatcherPredicate_Update(t *testing.T) {
 		{
 			name:     "pod doesn't match selector",
 			selector: map[string]string{"app": "backend"},
-			updateEvent: event.UpdateEvent{
+			updateEvent: event.TypedUpdateEvent[*v1.Pod]{
 				ObjectOld: &v1.Pod{
 					ObjectMeta: v12.ObjectMeta{Name: "pod1", Labels: map[string]string{"app": "backend4"}},
 					Spec:       v1.PodSpec{NodeName: "node1"},
@@ -73,7 +73,7 @@ func TestLabelMatcherPredicate_Update(t *testing.T) {
 		{
 			name:     "ip changed (pod scheduled)",
 			selector: map[string]string{"app": "backend"},
-			updateEvent: event.UpdateEvent{
+			updateEvent: event.TypedUpdateEvent[*v1.Pod]{
 				ObjectOld: &v1.Pod{
 					ObjectMeta: v12.ObjectMeta{Name: "pod1", Labels: map[string]string{"app": "backend"}},
 					Spec:       v1.PodSpec{NodeName: "node2"},
@@ -90,7 +90,7 @@ func TestLabelMatcherPredicate_Update(t *testing.T) {
 		{
 			name:     "node changed (pod scheduled)",
 			selector: map[string]string{"app": "backend"},
-			updateEvent: event.UpdateEvent{
+			updateEvent: event.TypedUpdateEvent[*v1.Pod]{
 				ObjectOld: &v1.Pod{
 					ObjectMeta: v12.ObjectMeta{Name: "pod1", Labels: map[string]string{"app": "backend"}},
 					Spec:       v1.PodSpec{NodeName: ""},

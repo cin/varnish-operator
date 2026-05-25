@@ -11,3 +11,11 @@ _output
 *.swp
 *.swo
 _book
+
+# Bundle output (make bundle)
+local/
+bundle/
+bundle.Dockerfile
+
+# E2E dev cluster
+e2e-tests-kubeconfig

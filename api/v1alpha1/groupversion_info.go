@@ -20,7 +20,7 @@ var (
 	SchemeGroupVersion = schema.GroupVersion{Group: "caching.ibm.com", Version: "v1alpha1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
-	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
+	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion} //nolint:staticcheck // kubebuilder scaffold
 
 	AddToSchemes runtime.SchemeBuilder
 )

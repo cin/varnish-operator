@@ -7,7 +7,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/caarlos0/env/v6"
+	"github.com/caarlos0/env/v11"
 	"github.com/pkg/errors"
 	"go.uber.org/zap/zapcore"
 )
@@ -56,7 +56,7 @@ func Load() (*Config, error) {
 	}
 
 	var err error
-	if err = env.ParseWithFuncs(&c, parsers); err != nil {
+	if err = env.ParseWithOptions(&c, env.Options{FuncMap: parsers}); err != nil {
 		return &c, errors.WithStack(err)
 	}
 

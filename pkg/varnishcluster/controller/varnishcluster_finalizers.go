@@ -27,7 +27,7 @@ const (
 )
 
 func (r *ReconcileVarnishCluster) reconcileFinalizers(ctx context.Context, instance *vcapi.VarnishCluster) error {
-	if !instance.ObjectMeta.DeletionTimestamp.IsZero() { //object is being deleted, don't set finalizers
+	if !instance.DeletionTimestamp.IsZero() { //object is being deleted, don't set finalizers
 		return nil
 	}
 

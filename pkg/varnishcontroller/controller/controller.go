@@ -56,14 +56,14 @@ func SetupVarnishReconciler(mgr manager.Manager, cfg *config.Config, varnish var
 		Client:                     mgr.GetClient(),
 		scheme:                     mgr.GetScheme(),
 		varnish:                    varnish,
-		eventHandler:               events.NewEventHandler(mgr.GetEventRecorderFor(events.EventRecorderName), cfg.PodName),
+		eventHandler:               events.NewEventHandler(mgr.GetEventRecorder(events.EventRecorderName), cfg.PodName),
 		metrics:                    metrics,
 		backendsSelectorPredicate:  backendLabelsPredicate,
 		backendsNamespacePredicate: backendNamespacePredicate,
 	}
 
-	podMapFunc := handler.EnqueueRequestsFromMapFunc(
-		func(a client.Object) []reconcile.Request {
+	podMapFunc := handler.TypedEnqueueRequestsFromMapFunc(
+		func(_ context.Context, _ *v1.Pod) []reconcile.Request {
 			return []reconcile.Request{
 				{NamespacedName: types.NamespacedName{
 					Namespace: cfg.Namespace,
@@ -77,28 +77,26 @@ func SetupVarnishReconciler(mgr manager.Manager, cfg *config.Config, varnish var
 
 	builder.For(&v1alpha1.VarnishCluster{}, ctrlBuilder.WithPredicates(predicates.NewVarnishClusterPredicate(r.config.VarnishClusterUID, logr)))
 
-	builder.Watches(
-		&source.Kind{Type: &v1.Pod{}},
+	builder.WatchesRawSource(source.Kind(
+		mgr.GetCache(),
+		&v1.Pod{},
 		podMapFunc,
-		ctrlBuilder.WithPredicates(
-			backendNamespacePredicate,
-			backendLabelsPredicate,
-		),
-	)
+		backendNamespacePredicate,
+		backendLabelsPredicate,
+	))
 
 	varnishPodsSelector := labels.SelectorFromSet(labels.Set{
 		v1alpha1.LabelVarnishOwner:     cfg.VarnishClusterName,
 		v1alpha1.LabelVarnishComponent: v1alpha1.VarnishComponentVarnish,
 		v1alpha1.LabelVarnishUID:       string(cfg.VarnishClusterUID),
 	})
-	builder.Watches(
-		&source.Kind{Type: &v1.Pod{}},
+	builder.WatchesRawSource(source.Kind(
+		mgr.GetCache(),
+		&v1.Pod{},
 		podMapFunc,
-		ctrlBuilder.WithPredicates(
-			predicates.NewNamespacesMatcherPredicate([]string{cfg.Namespace}, logr),
-			predicates.NewLabelMatcherPredicate(varnishPodsSelector, logr),
-		),
-	)
+		predicates.NewNamespacesMatcherPredicate([]string{cfg.Namespace}, logr),
+		predicates.NewLabelMatcherPredicate(varnishPodsSelector, logr),
+	))
 	//builder.WithEventFilter(predicates.NewDebugPredicate(logr))
 
 	return builder.Complete(r)
@@ -125,7 +123,9 @@ func (r *ReconcileVarnish) Reconcile(ctx context.Context, request reconcile.Requ
 
 	logr.Debugw("Reconciling...")
 	start := time.Now()
-	defer logr.Debugf("Reconciled in %s", time.Since(start).String())
+	defer func() {
+		logr.Debugf("Reconciled in %s", time.Since(start))
+	}()
 	ctx = logger.ToContext(ctx, logr)
 	res, err := r.reconcileWithContext(ctx, request)
 	if err != nil {
@@ -203,7 +203,7 @@ func (r *ReconcileVarnish) reconcileWithContext(ctx context.Context, request rec
 			errMsg := fmt.Sprintf("VCL ConfigMap %s has %s and %s.tmpl entries. Cannot include file and template with same name",
 				*vc.Spec.VCL.ConfigMapName, fileName, fileName)
 			r.eventHandler.Warning(vc, events.EventReasonInvalidVCLConfigMap, errMsg)
-			return reconcile.Result{}, errors.Errorf(errMsg)
+			return reconcile.Result{}, errors.Errorf("%s", errMsg)
 		}
 		newFiles[fileName] = contents
 	}

@@ -1,212 +1,255 @@
 # Development
 
-Requirements:
+This guide covers building, testing, and running the varnish-operator locally.
 
-* Kubernetes 1.21 or newer. You can use [minikube](https://kubernetes.io/docs/setup/minikube/) for local development.
-* Go 1.20+
-* [Kubebuilder](https://kubebuilder.io/quick-start.html#installation) 2.0.0+
-* [kustomize](https://github.com/kubernetes-sigs/kustomize) 3.1.0+
-* [helm](https://helm.sh/) v2.14.3+
-* [docker](https://docs.docker.com/install/)
-* [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports)
-* [GolangCI-Lint](https://github.com/golangci/golangci-lint) 1.19.1+
-* [gitbook cli](https://github.com/GitbookIO/gitbook-cli), if you want to modify and test the docs locally
-* [kind](https://github.com/kubernetes-sigs/kind) v0.6.0+ for running end to end tests
+For installing a released build in a cluster, see [Installation](installation.md).
 
-### Code structure
+## Requirements
 
-The project consists of 2 components working together:
+* **Go 1.26+**
+* **Kubernetes 1.29+** cluster and `kubectl` configured ( [kind](https://kind.sigs.k8s.io/), [minikube](https://minikube.sigs.k8s.io/), or an existing cluster)
+* **Docker** (or podman) for image builds and e2e tests
+* **Helm 3** for deploying the operator chart
+* **kind** v0.20+ for end-to-end tests
+* **golangci-lint** v2.9+ for `make lint` (must be built with Go 1.26+ to match `go.mod`)
+* **operator-sdk** v1.42+ and **yq** for `make bundle` (installed separately)
+* **setup-envtest** for controller unit tests (see [Unit tests](#unit-tests))
 
-* Varnish operator itself, that manages `VarnishCluster` resources
-* Varnish Controller is a process that's running in the same pod as Varnish. It is responsible for watching Kubernetes resources and reacting accordingly. For example, Varnish Controller reloads the VCL configuration when backends scale or the VCL configuration has changed in the ConfigMap.
-                                                                              
-Both components live in one repo and share the same codebase, dependencies, build scripts, etc.
+The Makefile downloads pinned versions of **controller-gen**, **kustomize**, and **goimports** into `./bin/` on first use. You do not need to install kubebuilder.
 
-The operator and varnish controller's codebases are located in `/pkg/varnishcluster/` and `pkg/varnishcontroller` folders respectively.
-The main packages for both components can be found in the `cmd/` folder.
+## Code structure
 
-### Developing the operator
+The project consists of two components:
+
+* **Varnish operator** — watches `VarnishCluster` resources and manages cluster infrastructure (StatefulSet, Services, RBAC, VCL ConfigMap, and so on).
+* **Varnish controller** — runs inside each Varnish pod. It watches Kubernetes resources and reloads VCL when backends, VCL files, or cluster membership change.
+
+Both components share one repository, dependencies, and build tooling.
+
+| Component | Source | Entry point |
+| --------- | ------ | ----------- |
+| Operator | `pkg/varnishcluster/` | `cmd/varnish-operator/main.go` |
+| Varnish controller | `pkg/varnishcontroller/` | `cmd/varnish-controller/main.go` |
+
+Kubebuilder/operator-sdk scaffolding lives under `config/` (CRDs, RBAC, bundle manifests). The Helm chart is in `varnish-operator/`.
+
+## Clone and setup
+
 ```bash
-$ git clone https://github.com/cin/varnish-operator.git
-$ cd varnish-operator
-$ go mod download
+git clone https://github.com/cin/varnish-operator.git
+cd varnish-operator
+go mod download
 ```
 
-#### Run the operator locally against a Kubernetes cluster
-The operator can be run locally without building the image every time the code changes.
+## Running the operator locally
 
-First, you need to install the [CRD](https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/) for `VarnishCluster` resource.
+Running the operator on your machine against a real cluster is the fastest way to iterate on operator code. Your local kubeconfig credentials are used instead of in-cluster RBAC.
+
+### Install the CRD
 
 ```bash
-$ make install
-<path>/<to>/<controller-gen>/controller-gen "crd:trivialVersions=true" rbac:roleName=varnish-operator paths="./..." output:crd:artifacts:config=config/crd/bases
-kustomize build <path>/<to>/<repo>/config/crd > <path>/<to>/<repo>/varnish-operator/templates/customresourcedefinition.yaml
-<path>/<to>/<controller-gen>/controller-gen "crd:trivialVersions=true" rbac:roleName=varnish-operator paths="./..." output:crd:none output:rbac:stdout > <path>/<to>/<repo>/varnish-operator/templates/clusterrole.yaml
-kustomize build <path>/<to>/<repo>/config/crd | kubectl apply -f -
-customresourcedefinition.apiextensions.k8s.io/varnishclusters.ibm.com created
+make install
 ```
 
-You should see the created CRD in your cluster:
+This applies the `VarnishCluster` CRD (`varnishclusters.caching.ibm.com`). Re-run after CRD schema changes.
+
+Verify:
 
 ```bash
-$ kubectl get customresourcedefinitions.apiextensions.k8s.io
- NAME                          CREATED AT
- varnishclusters.ibm.com       2019-06-05T09:53:26Z
+kubectl get crd varnishclusters.caching.ibm.com
 ```
 
-`make install` should be run only for the first time and after changes in the CRD schema because it is only responsible for installing and updating the CRD for the `VarnishCluster` resource.
+### Start the operator
 
-After that you're ready to run the operator:
-
- 
 ```bash
-$ make run
-make run                                                                                                              
-<path>/<to>/<controller-gen>/controller-gen object:headerFile=./hack/boilerplate.go.txt paths="./..."
-cd <path>/<to>/<repo>/varnish-operator/ && go generate ./pkg/... ./cmd/...
-cd <path>/<to>/<repo>/varnish-operator/ && goimports -w ./pkg ./cmd
-cd <path>/<to>/<repo>/varnish-operator/ && go vet ./pkg/... ./cmd/...
-NAMESPACE="default" LOGLEVEL=debug LOGFORMAT=console CONTAINER_IMAGE=cinple/varnish:0.20.0-dev LEADERELECTION_ENABLED=false WEBHOOKS_ENABLED=false go run <path>/<to>/<repo>/varnish-operator/cmd/manager/main.go...
+make run
 ```
 
-By default the operator will work in the `default` namespace. You can override that behaviour by setting the `NAMESPACE` env var:
+By default the operator watches the `default` namespace. Override with:
 
 ```bash
-$ NAMESPACE=varnish-operator make run
+NAMESPACE=varnish-operator make run
 ```
 
-After you've made changes to the operator code, just rerun `make run` to test them.
+`make run` sets `LEADERELECTION_ENABLED=false` and `WEBHOOKS_ENABLED=false` for simpler local development. The coupled Varnish image defaults to `cinple/varnish:local-dev` via the `REPO` and `VARNISH_IMG` Makefile variables.
 
-#### Deploying your operator in a Kubernetes cluster
-Some changes can't be tested by running the operator locally:
+After code changes, stop the process and run `make run` again.
 
-* Validating and Mutating webhooks.
-* Correctness of RBAC permissions. With the `make run` approach, your local `kubectl` configs are used to communicate with the cluster, not the clusterrole as it would be in production.
+### What local run cannot test
 
-To test that functionality, you would have to run your operator as a pod in the cluster.
+Some behavior only works when the operator runs as a pod with its ServiceAccount and webhooks enabled:
 
-This can be done using the helm template configured to use your custom image:
+* Validating and mutating webhooks (`WEBHOOKS_ENABLED=true`, plus TLS certs)
+* In-cluster RBAC (local run uses your kubeconfig user, not the operator ClusterRole)
 
-```bash
-docker build -t <image-name> -f Dockerfile .
-docker push <image-name>
-make manifests #make sure your helm charts are in sync with current CRD and RBAC definitions
-helm install varnish-operator --namespace varnish-operator-system --set container.image=<image-name> ./varnish-operator
-``` 
+For those cases, build and deploy the operator image (below).
 
-Check the operator pod logs to make sure all works as expected:
+## Deploying the operator in a cluster
+
+Build and load the operator image, regenerate manifests, and install with Helm:
 
 ```bash
-kubectl logs -n varnish-operator-system varnish-operator-fd96f48f-gn6mc
-{"level":"info","ts":1559818986.866487,"caller":"manager/main.go:34","msg":"Version: 0.14.5"}
-{"level":"info","ts":1559818986.8665597,"caller":"manager/main.go:35","msg":"Leader election enabled: true"}
-{"level":"info","ts":1559818986.866619,"caller":"manager/main.go:36","msg":"Log level: info"}
-...
+# Build operator image (runs unit tests first)
+make docker-build REPO=cinple VERSION=local
+
+# Regenerate CRD and ClusterRole in the Helm chart
+make manifests
+
+# Install or upgrade via Helm
+helm upgrade --install varnish-operator ./varnish-operator \
+  --namespace varnish-operator --create-namespace \
+  --set container.registry=cinple \
+  --set container.repository=varnish-operator \
+  --set container.tag=local
 ```
 
-### Developing varnish controller
-
-Varnish pods (with varnish-controller inside) can only be tested by running in Kubernetes. That means that we need to build an image every time we make a change in the code related to varnish-controller.
-
-After changes are made in the code, the typical workflow will be the following:
+Check logs:
 
 ```bash
-docker build -f Dockerfile.controller  -t <image-name> .
-docker push <image-name>
+kubectl logs -n varnish-operator -l app=varnish-operator --tail=50
 ```
 
-Then, in your `VarnishCluster`, specify your image:
+## Developing the varnish controller and sidecar images
+
+Varnish pods can only be exercised in Kubernetes. After changing varnish-controller, varnishd, or metrics-exporter code, rebuild the relevant image and point your `VarnishCluster` at it.
+
+Build all pod images (operator image is separate):
+
+```bash
+make docker-build-pod REPO=cinple VERSION=local
+```
+
+This produces:
+
+| Image | Dockerfile |
+| ----- | ---------- |
+| `cinple/varnish:local` | `Dockerfile.varnishd` |
+| `cinple/varnish-controller:local` | `Dockerfile.controller` |
+| `cinple/varnish-metrics-exporter:local` | `Dockerfile.exporter` |
+
+Override images in your `VarnishCluster`:
 
 ```yaml
-apiVersion: caching.ibm.com/v1alpha1
-kind: VarnishCluster
-...
 spec:
   varnish:
-...
+    image: cinple/varnish:local
     controller:
-      image: <image-name>
-...
-```
-
-The StatefulSet will reload the pods with new image. If you're reusing the same image name, make sure `spec.statefulSet.container.imagePullPolicy` is set to `Always` and reload the pods manually by deleting them or recreating the `VarnishCluster`. 
-
-To change varnishd - varnish daemon or varnish metrics exporter containers refer to appropriate Docker files configurations. Update `VarnishCluster` and specify your images same way as it is described for varnish controller above.
-
-To build new varnishd use:
-
-```bash
-docker build -f Dockerfile.varnish -t <image-name> .
-docker push <image-name>
-```
-
-Then, in your `VarnishCluster`, specify your image for varnishd:
-
-```yaml
-apiVersion: caching.ibm.com/v1alpha1
-kind: VarnishCluster
-...
-spec:
-  varnish:
-    image: <image-name>
-...
-```
-
-To build new varnish metrics exporter use:
-
-```bash
-docker build -f Dockerfile.exporter -t <image-name> .
-docker push <image-name>
-```
-
-Then, in your `VarnishCluster`, specify your image for varnish metrics exporter:
-
-```yaml
-apiVersion: caching.ibm.com/v1alpha1
-kind: VarnishCluster
-...
-spec:
-  varnish:
-...
+      image: cinple/varnish-controller:local
     metricsExporter:
-      image: <image-name>
-...
+      image: cinple/varnish-metrics-exporter:local
 ```
 
-There is `PROMETHEUS_VARNISH_EXPORTER_VERSION` docker's build argument available. This allows you to specify which version of prometheus varnish metrics exporter to use in your image. Just set it to the required value before build the metrics exporter image:
+If you reuse the same tag, set `spec.statefulSet.container.imagePullPolicy: Always` and restart pods (or delete them) so Kubernetes pulls the new layers.
 
-`docker build --build-arg PROMETHEUS_VARNISH_EXPORTER_VERSION=1.6.1  -t <image-name> -f Dockerfile.exporter .`
+The metrics exporter image accepts `PROMETHEUS_VARNISH_EXPORTER_VERSION` as a build argument:
 
-### Tests
+```bash
+docker build --build-arg PROMETHEUS_VARNISH_EXPORTER_VERSION=1.6.1 \
+  -t my-exporter:local -f Dockerfile.exporter .
+```
 
-To run tests simply run `make test` in repo's root directory. 
+## Code generation and manifests
 
-Tests depend on binaries provided by Kubebuilder, so it has to be [installed](https://kubebuilder.io/quick-start.html#installation) first.
+```bash
+make generate   # deepcopy and other generated code
+make manifests  # CRD + ClusterRole into varnish-operator/
+make fmt        # goimports (pinned in ./bin/)
+make vet        # go vet
+make lint       # golangci-lint
+```
 
-### End to End tests
+## Kubernetes versions in tests
 
-To run end-to-end tests you have to have [kind](https://github.com/kubernetes-sigs/kind) installed first. Then, simply run `make e2e-tests` in the root directory.
+Unit tests and end-to-end tests pin Kubernetes versions differently. **Do not reuse an e2e/kind version string for envtest** (or vice versa)—`setup-envtest use 1.35.1` fails with `unable to find archive` because envtest does not publish that tag.
 
-It will do the following:
- 1. Bring up a kubernetes cluster using `kind`. You can also set the Kubernetes version you want to use by setting the `KUBERNETES_VERSION` env var (e.g. `KUBERNETES_VERSION=1.6.3 make e2e-tests`)
- 1. Build all docker images and load them into the cluster
- 1. Install the operator using the local Helm chart. It will set the image pull policy to `Never` to be able to use the built images in previous step.
- 1. Run tests written in Go. The tests also rely on the docker images built and loaded into the cluster. It requires you to remember to use the local docker images, but it also facilitates better portability.
- 1. Delete the cluster
+| | Unit tests | End-to-end tests |
+| --- | --- | --- |
+| **Tool** | [envtest](https://book.kubebuilder.io/reference/envtest.html) via `setup-envtest` | [kind](https://kind.sigs.k8s.io/) `kindest/node` images |
+| **Tag format** | Minor releases from [controller-tools envtest](https://github.com/kubernetes-sigs/controller-tools/releases) (e.g. `1.36.0`, `1.35.0`, `1.34.1`) | Patch tags published on Docker Hub (e.g. `1.35.1`, `1.34.3`) |
+| **CI versions** | **1.36.0** (matches `k8s.io/*` v0.36 in `go.mod`) | **1.34.3**, **1.35.1** |
+| **Pick a version** | `setup-envtest list --platform linux/amd64` | [kindest/node tags](https://hub.docker.com/r/kindest/node/tags) or `docker pull kindest/node:vX.Y.Z` |
 
-### OperatorHub bundle generation
+Why they differ:
 
-The bundle is generated using [operator-sdk](https://sdk.operatorframework.io/) CLI.
+* **envtest** ships pre-built API server/etcd binaries per controller-tools release. Tags are sparse (often `X.Y.0` or `X.Y.1`), and newer tags may exist before a matching kind image is published.
+* **kind** needs a full node OCI image. CI only uses tags that exist on Docker Hub; unreleased versions (e.g. `1.36.0` at the time of writing) require `kind build node-image` locally via `hack/create_dev_cluster.sh`.
 
-The sources used for bundle generation located under `config/` directory. It includes CRD, rbac roles, samples, and the ClusterServiceVersion manifest. Modify those files in order to make changes to the deployment or the CSV.
-The autogenerated CRD and ClusterRole will be picked up automatically.
+## Unit tests
 
-To generate the bundle, you have to specify the version in an env var and run `make bundle`:
+Controller tests use envtest (a local Kubernetes API server). Install setup-envtest and point `KUBEBUILDER_ASSETS` at the binaries for an envtest release (see [Kubernetes versions in tests](#kubernetes-versions-in-tests)):
 
- `# VERSION=0.27.2 make bundle`
- 
-After that, a directory named by the version will be generated with the necessary manifests.
+```bash
+go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+export KUBEBUILDER_ASSETS="$(setup-envtest use 1.36.0 -p path)"
+make test
+```
 
-Review that manifests, make changes if necessary and it can be copied to the [community-operator](https://github.com/operator-framework/community-operators) project under the `varnish-operator` project (in `community-operator` and/or `upstream-community-operators` directory).
+Without `KUBEBUILDER_ASSETS`, the envtest-based controller suite will fail to start.
 
-After generation, you can test your bundle using community operators [tutorial](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md). 
+## End-to-end tests
+
+E2e tests create a kind cluster, build all images, install the operator from the local Helm chart, and run tests in `./tests`.
+
+```bash
+make e2e-tests
+```
+
+This runs `hack/create_dev_cluster.sh`, executes tests with `KUBECONFIG=./e2e-tests-kubeconfig`, then tears the cluster down.
+
+Use a specific Kubernetes version (must be a valid `kindest/node` tag—see [Kubernetes versions in tests](#kubernetes-versions-in-tests)):
+
+```bash
+KUBERNETES_VERSION=1.35.1 make e2e-tests
+```
+
+For versions without a pre-built `kindest/node` image, the dev script builds the node image locally with `kind build node-image`.
+
+The helper script builds images as `cinple/*:local` and sets `imagePullPolicy=Never` so kind can use locally built images.
+
+Manual workflow:
+
+```bash
+./hack/create_dev_cluster.sh
+KUBECONFIG=./e2e-tests-kubeconfig go test ./tests
+./hack/delete_dev_cluster.sh
+```
+
+Optional flags for `create_dev_cluster.sh`:
+
+* `-s` — skip Docker build (images must already exist locally)
+* `-v` — create a sample `VarnishCluster`
+* `-b` — create nginx backend deployments
+
+CI runs e2e against Kubernetes **1.34.3** and **1.35.1** (see [Kubernetes versions in tests](#kubernetes-versions-in-tests)).
+
+## OperatorHub bundle generation
+
+Bundles are generated with [operator-sdk](https://sdk.operatorframework.io/). Source manifests live under `config/` (CRD, RBAC, samples, ClusterServiceVersion).
+
+```bash
+# Semver bundle version; use any tag for the container image
+VERSION=0.37.0 make bundle
+
+# Local/dev image tag maps to bundle version 0.0.0-local
+VERSION=local make bundle
+```
+
+Output is written to `./$(VERSION)/` (for example `./local/`). The target validates the bundle, copies `Dockerfile.bundle`, and replaces any previous output directory with the same name.
+
+Review the generated manifests before publishing. Bundles can be tested with the [community-operators testing guide](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md).
+
+## Useful Makefile variables
+
+| Variable | Default | Purpose |
+| -------- | ------- | ------- |
+| `VERSION` | `local` | Image tag suffix |
+| `REPO` | `cinple` | Container registry / namespace prefix |
+| `NAMESPACE` | `default` | Namespace for `make run` and `helm-upgrade` |
+| `PLATFORM` | `linux/amd64` | Docker build platform |
+
+Examples:
+
+```bash
+make docker-build REPO=myregistry VERSION=dev
+make run NAMESPACE=varnish-operator REPO=myregistry
+```

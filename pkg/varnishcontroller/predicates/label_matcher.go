@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
-var _ predicate.Predicate = &LabelMatcherPredicate{}
+var _ predicate.TypedPredicate[*v1.Pod] = &LabelMatcherPredicate{}
 
 type LabelMatcherPredicate struct {
 	logger   *logger.Logger
@@ -26,25 +26,22 @@ func NewLabelMatcherPredicate(selector labels.Selector, logr *logger.Logger) *La
 	}
 }
 
-func (p *LabelMatcherPredicate) Create(e event.CreateEvent) bool {
+func (p *LabelMatcherPredicate) Create(e event.TypedCreateEvent[*v1.Pod]) bool {
 	return p.Selector.Matches(labels.Set(e.Object.GetLabels()))
 }
 
-func (p *LabelMatcherPredicate) Delete(e event.DeleteEvent) bool {
+func (p *LabelMatcherPredicate) Delete(e event.TypedDeleteEvent[*v1.Pod]) bool {
 	return p.Selector.Matches(labels.Set(e.Object.GetLabels()))
 }
 
-func (p *LabelMatcherPredicate) Update(e event.UpdateEvent) bool {
+func (p *LabelMatcherPredicate) Update(e event.TypedUpdateEvent[*v1.Pod]) bool {
 	if !p.Selector.Matches(labels.Set(e.ObjectNew.GetLabels())) {
 		return false
 	}
 
-	oldPod, isPod := e.ObjectOld.(*v1.Pod)
-	if !isPod {
-		return true
-	}
-	newPod, isPod := e.ObjectNew.(*v1.Pod)
-	if !isPod {
+	oldPod := e.ObjectOld
+	newPod := e.ObjectNew
+	if oldPod == nil || newPod == nil {
 		return true
 	}
 
@@ -63,6 +60,6 @@ func (p *LabelMatcherPredicate) Update(e event.UpdateEvent) bool {
 	return false
 }
 
-func (p *LabelMatcherPredicate) Generic(e event.GenericEvent) bool {
+func (p *LabelMatcherPredicate) Generic(e event.TypedGenericEvent[*v1.Pod]) bool {
 	return p.Selector.Matches(labels.Set(e.Object.GetLabels()))
 }

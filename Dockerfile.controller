@@ -1,5 +1,5 @@
 ARG BUILDPLATFORM=linux/amd64
-FROM --platform=$BUILDPLATFORM golang:1.20-bullseye AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive INSTALL_DIRECTORY=/usr/local/bin
 
@@ -28,7 +28,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     ./cmd/varnish-controller/
 
 
-FROM --platform=$BUILDPLATFORM debian:bullseye-slim as binary
+FROM --platform=$BUILDPLATFORM debian:bullseye-slim AS binary
 
 RUN apt-get update && apt-get install -y --no-install-recommends varnish
 

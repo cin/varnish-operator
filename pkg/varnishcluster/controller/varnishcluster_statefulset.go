@@ -307,6 +307,9 @@ func (r *ReconcileVarnishCluster) reconcileStatefulSet(ctx context.Context, inst
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "could not create statefulset")
 		}
+		if err = r.Get(ctx, types.NamespacedName{Name: desired.Name, Namespace: desired.Namespace}, found); err != nil {
+			return nil, nil, errors.Wrap(err, "could not get statefulset after create")
+		}
 	} else if err != nil {
 		return nil, nil, errors.Wrap(err, "could not get current state of statefulset")
 	} else {
@@ -328,7 +331,6 @@ func (r *ReconcileVarnishCluster) reconcileStatefulSet(ctx context.Context, inst
 
 	instanceStatus.Status.VarnishArgs = strings.Join(varnishdArgs, " ")
 	instanceStatus.Status.Replicas = found.Status.Replicas
-	desired.Spec.Template.Spec.PriorityClassName = found.Spec.Template.Spec.PriorityClassName
 	return found, varnishLabels, nil
 }
 

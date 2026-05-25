@@ -16,6 +16,8 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"go.uber.org/zap"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -72,15 +74,24 @@ func main() {
 
 	ctrl.SetLogger(zapr.NewLogger(logr.Desugar())) //set logger for controller-runtime to see internal library logs
 
-	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := ctrl.NewManager(clientConfig, ctrl.Options{
-		Scheme:                  scheme,
-		MetricsBindAddress:      fmt.Sprintf(":%d", operatorConfig.MetricsPort),
+	mgrOptions := ctrl.Options{
+		Scheme: scheme,
+		Metrics: metricsserver.Options{
+			BindAddress: fmt.Sprintf(":%d", operatorConfig.MetricsPort),
+		},
 		LeaderElection:          operatorConfig.LeaderElectionEnabled,
 		LeaderElectionID:        leaderElectionID,
 		LeaderElectionNamespace: operatorConfig.Namespace,
 		HealthProbeBindAddress:  fmt.Sprintf(":%d", v1alpha1.HealthCheckPort),
-	})
+	}
+	if operatorConfig.WebhooksEnabled {
+		mgrOptions.WebhookServer = webhook.NewServer(webhook.Options{
+			Port: int(operatorConfig.WebhooksPort),
+		})
+	}
+
+	// Create a new Cmd to provide shared dependencies and start components
+	mgr, err := ctrl.NewManager(clientConfig, mgrOptions)
 	if err != nil {
 		logr.With(zap.Error(err)).Fatal("unable to set up overall controller manager")
 	}
@@ -104,7 +115,6 @@ func main() {
 
 	if operatorConfig.WebhooksEnabled {
 		logr.Infof("Admission webhooks port: %d", operatorConfig.WebhooksPort)
-		mgr.GetWebhookServer().Port = int(operatorConfig.WebhooksPort)
 		if err = (&v1alpha1.VarnishCluster{}).SetupWebhookWithManager(mgr); err != nil {
 			logr.With(zap.Error(err)).Fatal("unable to create webhook")
 		}
