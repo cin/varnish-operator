@@ -8,24 +8,33 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   docs:
     runs-on: ubuntu-latest
-    container:
-      image: node:10.16-jessie
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
-      - name: install gitbook
-        run: npm install -g gitbook-cli@2.3.2
-      - name: build docs
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+      - name: Install docs dependencies
+        working-directory: docs
+        run: npm ci
+      - name: Build docs
+        working-directory: docs
+        run: npm run build
+      - name: Deploy to gh-pages
         run: |
-          gitbook install ./docs
-          gitbook build ./docs docs_generated --log=debug --debug
           cd docs_generated/
           git init
           git add .
-          git config --global user.email "actions@github.com"
-          git config --global user.name "gh-actions"
+          git config user.email "actions@github.com"
+          git config user.name "gh-actions"
           git commit -m "Deploy Docs from Actions"
           git push --force --quiet https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:gh-pages

@@ -222,6 +222,20 @@ Optional flags for `create_dev_cluster.sh`:
 
 CI runs e2e against Kubernetes **1.34.3** and **1.35.1** (see [Kubernetes versions in tests](#kubernetes-versions-in-tests)).
 
+## Documentation site
+
+The GitHub Pages site is built with [HonKit](https://github.com/honkit/honkit) (a maintained fork of legacy GitBook). Sources live under `docs/`; CI runs `npm ci` and `npm run build` in that directory and publishes `docs_generated/` to the `gh-pages` branch.
+
+Requires **Node.js 20+** (`docs/package.json` `engines`, `docs/.nvmrc`).
+
+```bash
+cd docs
+nvm install && nvm use   # if using nvm
+npm ci
+npm run build    # writes ../docs_generated/
+npm run serve    # local preview at http://localhost:4000
+```
+
 ## OperatorHub bundle generation
 
 Bundles are generated with [operator-sdk](https://sdk.operatorframework.io/). Source manifests live under `config/` (CRD, RBAC, samples, ClusterServiceVersion).

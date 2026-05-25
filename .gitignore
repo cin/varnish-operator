@@ -11,6 +11,8 @@ _output
 *.swp
 *.swo
 _book
+docs/node_modules
+docs_generated
 
 # Bundle output (make bundle)
 local/
