@@ -20,6 +20,7 @@ var (
 func getSanitizedVarnishArgs(spec *vcapi.VarnishClusterSpec) []string {
 	varnishArgsOverrides := [][]string{
 		{"-F"},
+		{"-n", vcapi.VarnishWorkDir},
 		{"-S", "/etc/varnish-secret/secret"},
 		{"-b", "127.0.0.1:0"}, //start a varnishd without predefined backend. It has to be overridden by settings from ConfigMap
 		{"-T", fmt.Sprintf("0.0.0.0:%d", vcapi.VarnishAdminPort)},

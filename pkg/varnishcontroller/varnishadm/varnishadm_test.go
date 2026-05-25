@@ -30,6 +30,26 @@ func TestNewVarnishAdministartor(t *testing.T) {
 	}
 }
 
+func TestPingPassesVarnishAdmArgs(t *testing.T) {
+	var got []string
+	p := &VarnishAdm{
+		pingTimeout:    50 * time.Millisecond,
+		pingDelay:      time.Microsecond,
+		varnishAdmArgs: []string{"-T", "127.0.0.1:6082", "-S", "/etc/secret"},
+		execute: func(_ string, args ...string) executor {
+			got = append([]string(nil), args...)
+			return &mockExecutor{}
+		},
+	}
+	if err := p.Ping(); err != nil {
+		t.Fatalf("ping: %v", err)
+	}
+	want := []string{"-T", "127.0.0.1:6082", "-S", "/etc/secret", "ping"}
+	if !cmp.Equal(got, want) {
+		t.Fatalf("unexpected ping args: %s", cmp.Diff(want, got))
+	}
+}
+
 func TestPingCommand(t *testing.T) {
 	cases := []struct {
 		errExpected error
@@ -65,9 +85,10 @@ func TestPingCommand(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(tt *testing.T) {
 			p := &VarnishAdm{
-				pingTimeout: tc.timeout,
-				pingDelay:   tc.delay,
-				execute:     tc.execute,
+				pingTimeout:    tc.timeout,
+				pingDelay:      tc.delay,
+				execute:        tc.execute,
+				varnishAdmArgs: []string{"-T", "127.0.0.1:6082", "-S", "/etc/varnish-secret/secret"},
 			}
 			err := p.Ping()
 			if !cmp.Equal(err, tc.errExpected, equalError) {

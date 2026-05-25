@@ -51,6 +51,11 @@ const (
 	VarnishSharedVolume              = "workdir"
 	VarnishSettingsVolume            = "settings"
 	VarnishSecretVolume              = "secret"
+	// VarnishWorkDir is the shared emptyDir mount for varnishd and varnishstat (must match -n).
+	VarnishWorkDir = "/var/lib/varnish"
+	// VarnishRunAsUID and VarnishRunAsGID match the varnish system user from the Debian varnish package in our images.
+	VarnishRunAsUID = 997
+	VarnishRunAsGID = 997
 
 	VarnishUpdateStrategyDelayedRollingUpdate = "DelayedRollingUpdate"
 

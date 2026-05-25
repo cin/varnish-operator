@@ -28,24 +28,26 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     ./cmd/varnish-controller/
 
 
-FROM --platform=$BUILDPLATFORM debian:bullseye-slim AS binary
+FROM --platform=$BUILDPLATFORM debian:trixie-slim AS binary
 
-RUN apt-get update && apt-get install -y --no-install-recommends varnish
+RUN apt-get update && apt-get install -y --no-install-recommends varnish \
+    && rm -rf /var/lib/apt/lists/*
 
 
 # Build Final Varnish image
-FROM --platform=$BUILDPLATFORM debian:bullseye-slim
+FROM --platform=$BUILDPLATFORM debian:trixie-slim
 LABEL maintainer="Alex Lytvynenko <oleksandr.lytvynenko@ibm.com>, Tomash Sidei <tomash.sidei@ibm.com>"
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends libc6 libedit2 libncursesw6 libtinfo6 libvarnishapi2 \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+    libc6 libedit2 libncursesw6 libtinfo6 libvarnishapi3 varnish \
     && rm -rf /var/lib/apt/lists/* \
                     /etc/varnish/* \
-    && adduser --quiet --system --no-create-home --home /nonexistent --group varnish \
     && mkdir -p /etc/varnish /var/lib/varnish \
-    && chown -R varnish /etc/varnish /var/lib/varnish
+    && chown -R varnish:varnish /etc/varnish /var/lib/varnish
 
 COPY --from=binary /usr/bin/varnishadm /usr/bin/varnishstat /usr/bin/
 COPY --from=builder /go/src/github.com/cin/varnish-operator/varnish-controller /varnish-controller
+RUN chown varnish:varnish /varnish-controller /usr/bin/varnishadm /usr/bin/varnishstat
 
 USER varnish
 

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	vcapi "github.com/cin/varnish-operator/api/v1alpha1"
@@ -22,6 +23,19 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
+
+// varnishContainerSecurityContext runs pod sidecars as the Debian varnish package user (non-root).
+func varnishContainerSecurityContext() *v1.SecurityContext {
+	return &v1.SecurityContext{
+		AllowPrivilegeEscalation: proto.Bool(false),
+		Capabilities: &v1.Capabilities{
+			Drop: []v1.Capability{"ALL"},
+		},
+		RunAsNonRoot: proto.Bool(true),
+		RunAsUser:    proto.Int64(vcapi.VarnishRunAsUID),
+		RunAsGroup:   proto.Int64(vcapi.VarnishRunAsGID),
+	}
+}
 
 func (r *ReconcileVarnishCluster) reconcileStatefulSet(ctx context.Context, instance, instanceStatus *vcapi.VarnishCluster, endpointSelector map[string]string) (*appsv1.StatefulSet, map[string]string, error) {
 	varnishLabels := vclabels.CombinedComponentLabels(instance, vcapi.VarnishComponentVarnish)
@@ -152,7 +166,13 @@ func (r *ReconcileVarnishCluster) reconcileStatefulSet(ctx context.Context, inst
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									Exec: &v1.ExecAction{
-										Command: []string{"/usr/bin/varnishadm", "ping"},
+										// Varnish 7+ requires explicit admin socket and secret (bare varnishadm ping fails).
+										Command: []string{
+											"/usr/bin/varnishadm",
+											"-S", "/etc/varnish-secret/secret",
+											"-T", fmt.Sprintf("127.0.0.1:%d", vcapi.VarnishAdminPort),
+											"ping",
+										},
 									},
 								},
 								TimeoutSeconds:   30,
@@ -164,11 +184,15 @@ func (r *ReconcileVarnishCluster) reconcileStatefulSet(ctx context.Context, inst
 							TerminationMessagePolicy: v1.TerminationMessageReadFile,
 							ImagePullPolicy:          instance.Spec.Varnish.ImagePullPolicy,
 							EnvFrom:                  instance.Spec.Varnish.EnvFrom,
+							SecurityContext:          varnishContainerSecurityContext(),
 						},
 						//Varnish metrics
 						{
 							Name:  vcapi.VarnishMetricsExporterName,
 							Image: varnishMetricsImage,
+							Args: []string{
+								"-n", vcapi.VarnishWorkDir,
+							},
 							Ports: []v1.ContainerPort{
 								{
 									Name:          vcapi.VarnishMetricsPortName,
@@ -205,6 +229,7 @@ func (r *ReconcileVarnishCluster) reconcileStatefulSet(ctx context.Context, inst
 							TerminationMessagePath:   "/dev/termination-log",
 							TerminationMessagePolicy: v1.TerminationMessageReadFile,
 							ImagePullPolicy:          instance.Spec.Varnish.MetricsExporter.ImagePullPolicy,
+							SecurityContext:          varnishContainerSecurityContext(),
 						},
 						//Varnish controller
 						{
@@ -262,11 +287,14 @@ func (r *ReconcileVarnishCluster) reconcileStatefulSet(ctx context.Context, inst
 							TerminationMessagePath:   "/dev/termination-log",
 							TerminationMessagePolicy: v1.TerminationMessageReadFile,
 							ImagePullPolicy:          instance.Spec.Varnish.Controller.ImagePullPolicy,
+							SecurityContext:          varnishContainerSecurityContext(),
 						},
 					},
 					TerminationGracePeriodSeconds: proto.Int64(30),
 					DNSPolicy:                     v1.DNSClusterFirst,
-					SecurityContext:               &v1.PodSecurityContext{},
+					SecurityContext: &v1.PodSecurityContext{
+						FSGroup: proto.Int64(vcapi.VarnishRunAsGID),
+					},
 					ServiceAccountName:            names.ServiceAccount(instance.Name),
 					NodeSelector:                  instance.Spec.NodeSelector,
 					Affinity:                      instance.Spec.Affinity,

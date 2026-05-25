@@ -104,6 +104,7 @@ var _ = Describe("statefulset", func() {
 				"-T", "0.0.0.0:6082",
 				"-a", "0.0.0.0:6081",
 				"-b", "127.0.0.1:0",
+				"-n", vcapi.VarnishWorkDir,
 			}))
 			Expect(varnishContainer.Image).To(Equal(testCoupledVarnishImage))
 			Expect(varnishContainer.Resources).ToNot(BeNil(), "kubernetes will set to empty struct if nil and we will infinitely fight with kubernetes by resetting it to nil")
@@ -111,6 +112,12 @@ var _ = Describe("statefulset", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(varnishPort.ContainerPort).To(Equal(int32(vcapi.VarnishPort)))
 			Expect(varnishPort.Protocol).To(Equal(v1.ProtocolTCP))
+			Expect(varnishContainer.ReadinessProbe.Exec.Command).To(Equal([]string{
+				"/usr/bin/varnishadm",
+				"-S", "/etc/varnish-secret/secret",
+				"-T", fmt.Sprintf("127.0.0.1:%d", vcapi.VarnishAdminPort),
+				"ping",
+			}))
 
 			varnishControllerContainer, err := getContainerByName(podSpec, vcapi.VarnishControllerName)
 			Expect(err).ToNot(HaveOccurred())
@@ -128,6 +135,7 @@ var _ = Describe("statefulset", func() {
 			metricsContainer, err := getContainerByName(podSpec, vcapi.VarnishMetricsExporterName)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(metricsContainer.Image).To(Equal("cinple/varnish-metrics-exporter:test"))
+			Expect(metricsContainer.Args).To(Equal([]string{"-n", vcapi.VarnishWorkDir}))
 			varnishMetricsExporterPort, err := getContainerPortByName(metricsContainer, vcapi.VarnishMetricsPortName)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(varnishMetricsExporterPort.ContainerPort).To(Equal(int32(vcapi.VarnishPrometheusExporterPort)))
@@ -161,6 +169,8 @@ var _ = Describe("statefulset", func() {
 				"0.0.0.0:6081",
 				"-b",
 				"127.0.0.1:0",
+				"-n",
+				vcapi.VarnishWorkDir,
 				"-p",
 				"default_grace=3600",
 				"-p",

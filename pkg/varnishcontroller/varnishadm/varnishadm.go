@@ -84,7 +84,7 @@ func (v *VarnishAdm) Ping() error {
 	out := make(chan struct{})
 	done := make(chan struct{})
 	defer close(done)
-	args := []string{"ping"}
+	args := append(append([]string{}, v.varnishAdmArgs...), "ping")
 	go func(out, done chan struct{}) {
 		defer close(out)
 		for {

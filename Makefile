@@ -120,8 +120,10 @@ else
 endif
 
 # Build the docker image with varnish metrics exporter
+PROMETHEUS_VARNISH_EXPORTER_VERSION ?= v1.8.3
 docker-build-varnish-exporter:
-	docker build --platform ${PLATFORM} ${ROOT_DIR} -t ${VARNISH_METRICS_IMG} -f Dockerfile.exporter
+	docker build --platform ${PLATFORM} ${ROOT_DIR} -t ${VARNISH_METRICS_IMG} -f Dockerfile.exporter \
+		--build-arg PROMETHEUS_VARNISH_EXPORTER_VERSION=${PROMETHEUS_VARNISH_EXPORTER_VERSION}
 
 docker-tag-push-varnish-exporter:
 ifndef PUBLISH

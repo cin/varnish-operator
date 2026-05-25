@@ -36,6 +36,7 @@ func TestGetSanitizedVarnishArgs(t *testing.T) {
 				"-T", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishAdminPort),
 				"-a", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishPort),
 				"-b", "127.0.0.1:0",
+				"-n", v1alpha1.VarnishWorkDir,
 			},
 		},
 		{
@@ -52,6 +53,7 @@ func TestGetSanitizedVarnishArgs(t *testing.T) {
 				"-T", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishAdminPort),
 				"-a", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishPort),
 				"-b", "127.0.0.1:0",
+				"-n", v1alpha1.VarnishWorkDir,
 			},
 		},
 		{
@@ -68,6 +70,7 @@ func TestGetSanitizedVarnishArgs(t *testing.T) {
 				"-T", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishAdminPort),
 				"-a", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishPort),
 				"-b", "127.0.0.1:0",
+				"-n", v1alpha1.VarnishWorkDir,
 			},
 		},
 		{
@@ -84,6 +87,7 @@ func TestGetSanitizedVarnishArgs(t *testing.T) {
 				"-T", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishAdminPort),
 				"-a", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishPort),
 				"-b", "127.0.0.1:0",
+				"-n", v1alpha1.VarnishWorkDir,
 			},
 		},
 		{
@@ -100,6 +104,7 @@ func TestGetSanitizedVarnishArgs(t *testing.T) {
 				"-T", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishAdminPort),
 				"-a", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishPort),
 				"-b", "127.0.0.1:0",
+				"-n", v1alpha1.VarnishWorkDir,
 				"-p", "default_grace=3600",
 				"-p", "default_ttl=3600",
 			},
@@ -118,6 +123,7 @@ func TestGetSanitizedVarnishArgs(t *testing.T) {
 				"-T", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishAdminPort),
 				"-a", fmt.Sprintf("0.0.0.0:%d", v1alpha1.VarnishPort),
 				"-b", "127.0.0.1:0",
+				"-n", v1alpha1.VarnishWorkDir,
 				"-p", "default_grace=3600",
 				"-p", "default_ttl=3600",
 			},
@@ -138,6 +144,7 @@ func TestGetSanitizedVarnishArgs(t *testing.T) {
 				"-a", ":4392",
 				"-a", ":8080,PROXY",
 				"-b", "127.0.0.1:0",
+				"-n", v1alpha1.VarnishWorkDir,
 				"-p", "default_grace=3600",
 				"-p", "default_ttl=3600",
 			},
