@@ -45,6 +45,12 @@ var _ = Describe("the varnish secret", func() {
 	}
 
 	secretName := types.NamespacedName{Name: names.VarnishSecret(vc.Name), Namespace: vcNamespace}
+	BeforeEach(func() {
+		_ = k8sClient.Delete(context.Background(), &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{Name: secretName.Name, Namespace: secretName.Namespace},
+		})
+		waitUntilSecretRemoved(secretName.Name, secretName.Namespace)
+	})
 	AfterEach(func() {
 		CleanUpCreatedResources(vcName, vcNamespace)
 	})
@@ -168,7 +174,7 @@ var _ = Describe("the varnish secret", func() {
 		})
 	})
 
-	Context("when the secret already exists and has empty password", func() {
+	Context("when the secret already exists with other keys and empty varnish password", func() {
 		It("should update the password and do not touch another key", func() {
 			customSecret := &v1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
