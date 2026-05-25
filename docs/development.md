@@ -158,6 +158,23 @@ docker build --build-arg PROMETHEUS_VARNISH_EXPORTER_VERSION=v1.8.3 \
 
 When upgrading from older Varnish images, review custom VCL for [Varnish 7](https://varnish-cache.org/docs/7.0/whats-new/upgrading-7.0.html) and [Varnish 9](https://varnish-cache.org/docs/9.0/whats-new/upgrading-9.0.html) release notes (PCRE2, removed APIs, etc.). Expect a cold cache after rollout; the default workdir is `emptyDir`.
 
+### Default VCL on a dev cluster
+
+`./hack/create_dev_cluster.sh -v` creates a `VarnishCluster` that references `vcl-config` / `entrypoint.vcl`. If that ConfigMap does not exist, the operator seeds the [default VCL](../pkg/varnishcluster/controller/varnishcluster_default_vcl.go) (`import var`, `directors` round-robin backends, `/heartbeat`, `/liveness`, `X-Varnish-Cache`).
+
+Manual smoke test (after `-b` and `-v`):
+
+```bash
+export KUBECONFIG=./e2e-tests-kubeconfig
+kubectl port-forward -n varnish-cluster svc/varnishcluster-example 8080:80
+
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8080/heartbeat   # 200
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8080/liveness    # 200
+curl -sI http://127.0.0.1:8080/ | grep -i x-varnish-cache                  # MISS then HIT
+```
+
+Automated coverage: `go test ./tests -ginkgo.focus="operator default VCL"` (requires `make e2e-tests` or an equivalent cluster).
+
 ## Code generation and manifests
 
 ```bash

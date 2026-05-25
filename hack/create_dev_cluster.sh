@@ -42,6 +42,41 @@ if ! which helm >/dev/null; then
     exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+KUBECONFIG_FILE="${ROOT_DIR}/e2e-tests-kubeconfig"
+
+function e2e_kubeconfig_valid() {
+  kubectl config current-context --kubeconfig="${KUBECONFIG_FILE}" >/dev/null 2>&1
+}
+
+function refresh_e2e_kubeconfig_from_kind() {
+  if kind get clusters 2>/dev/null | grep -qx "${cluster_name}"; then
+    kind get kubeconfig --name "${cluster_name}" > "${KUBECONFIG_FILE}"
+    return 0
+  fi
+  return 1
+}
+
+function use_e2e_kubeconfig() {
+  if [[ -f "${KUBECONFIG_FILE}" ]] && ! e2e_kubeconfig_valid; then
+    echo "warning: ${KUBECONFIG_FILE} is empty or stale; refreshing from kind cluster ${cluster_name}..." >&2
+    rm -f "${KUBECONFIG_FILE}"
+  fi
+  if [[ ! -f "${KUBECONFIG_FILE}" ]]; then
+    if ! refresh_e2e_kubeconfig_from_kind; then
+      echo "error: no valid kubeconfig at ${KUBECONFIG_FILE} and kind cluster '${cluster_name}' is not running." >&2
+      echo "Run: ${SCRIPT_DIR}/create_dev_cluster.sh   # without -v or -b" >&2
+      exit 1
+    fi
+  fi
+  if ! e2e_kubeconfig_valid; then
+    echo "error: ${KUBECONFIG_FILE} is not a usable kubeconfig." >&2
+    exit 1
+  fi
+  export KUBECONFIG="${KUBECONFIG_FILE}"
+}
+
 varnish_namespace="varnish-operator"
 cluster_name="e2e-tests"
 repo="cinple"
@@ -66,20 +101,36 @@ Creates a dev cluster and varnish-operator install
 -n|--namespace              | namespace
 -p|--platform               | platform (not validated so know which build you're calling)
 -r|--repo                   | CR repository
--b|--backends               | create backends
+-b|--backends               | create nginx backends (requires cluster; run script without -v/-b first)
 -s|--skip-docker-build      | skip docker build
--v|--create-varnishcluster  | create varnish cluster
+-v|--create-varnishcluster  | create sample VarnishCluster (requires cluster; run script without -v/-b first)
 -x|--ignore-podman          | ignore podman's presence
 !
 }
 
 function default_vc_namespace {
+  use_e2e_kubeconfig
   if [[ "$varnish_namespace" == "varnish-operator" ]]; then
     if [ "$(kubectl get namespace --no-headers | grep varnish-cluster | wc -l | xargs echo -n)" -eq 0 ]; then
       kubectl create namespace varnish-cluster
     fi
     varnish_namespace="varnish-cluster"
   fi
+}
+
+function load_local_images_into_kind() {
+  use_e2e_kubeconfig
+  if ! kind get clusters 2>/dev/null | grep -qx "${cluster_name}"; then
+    echo "error: kind cluster '${cluster_name}' not found." >&2
+    exit 1
+  fi
+  for image in "${workload_images[@]}"; do
+    if ! docker image inspect "${image}" >/dev/null 2>&1; then
+      echo "error: local image ${image} not found. Run ${SCRIPT_DIR}/create_dev_cluster.sh (without -v/-b) to build images first." >&2
+      exit 1
+    fi
+    kind load docker-image --name "${cluster_name}" "${image}"
+  done
 }
 
 function create_nginx_backends {
@@ -98,6 +149,7 @@ function create_varnishcluster {
   fi
 
   default_vc_namespace
+  load_local_images_into_kind
   cat <<EOF | kubectl create -f -
 apiVersion: caching.ibm.com/v1alpha1
 kind: VarnishCluster
@@ -108,6 +160,15 @@ spec:
   vcl:
    configMapName: vcl-config
    entrypointFileName: entrypoint.vcl
+  varnish:
+    image: ${repo}/varnish:local
+    imagePullPolicy: Never
+    controller:
+      image: ${repo}/varnish-controller:local
+      imagePullPolicy: Never
+    metricsExporter:
+      image: ${repo}/varnish-metrics-exporter:local
+      imagePullPolicy: Never
   backend:
     port: 80
     selector:
@@ -133,6 +194,12 @@ while (( "$#" )); do
   esac
 done
 
+cd "${ROOT_DIR}"
+
+container_image="${repo}/varnish-operator:local"
+workload_images=("${repo}/varnish:local" "${repo}/varnish-controller:local" "${repo}/varnish-metrics-exporter:local")
+images=("${container_image}" "${workload_images[@]}")
+
 if [ "$create_vc" = true ]; then
   create_varnishcluster
   exit 0
@@ -143,8 +210,6 @@ if [ "$create_backends" = true ]; then
   exit 0
 fi
 
-container_image="$repo/varnish-operator:local"
-images=($container_image $repo/varnish:local $repo/varnish-controller:local $repo/varnish-metrics-exporter:local)
 dockerfiles=(Dockerfile Dockerfile.varnishd Dockerfile.controller Dockerfile.exporter)
 
 if [[ $platform =~ ^.*,.*$ ]]; then
@@ -168,9 +233,10 @@ fi
 if [ "$manage_cluster" = true ]; then
   kind_node_image="$(ensure_kind_node_image "${kube_version}")"
   kind delete cluster --name $cluster_name > /dev/null 2>&1
-  kind create cluster --name $cluster_name --image "${kind_node_image}" --kubeconfig ./e2e-tests-kubeconfig
-  export KUBECONFIG=./e2e-tests-kubeconfig
+  kind create cluster --name $cluster_name --image "${kind_node_image}" --kubeconfig "${KUBECONFIG_FILE}"
 fi
+
+use_e2e_kubeconfig
 
 if [ "$(kubectl get namespace --no-headers | grep varnish-operator | wc -l | xargs echo -n)" -eq 0 ]; then
   kubectl create ns $varnish_namespace
@@ -202,7 +268,7 @@ if [ "$skip_docker_build" = false ]; then
 fi
 
 for image in "${images[@]}"; do
-  kind load docker-image -n $cluster_name $image
+  kind load docker-image --name "${cluster_name}" "${image}"
 done
 
 helm install varnish-operator varnish-operator --namespace=$varnish_namespace --wait --set container.imagePullPolicy=Never --set container.image=$container_image
