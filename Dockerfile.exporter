@@ -1,4 +1,5 @@
 ARG BUILDPLATFORM=linux/amd64
+ARG VARNISH_VERSION_NUMBER=9.0.3-1
 FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS builder
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
@@ -14,15 +15,14 @@ WORKDIR /src/prometheus_varnish_exporter
 
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /prometheus-varnish-exporter .
 
+
 FROM --platform=$BUILDPLATFORM debian:trixie-slim
 LABEL maintainer="Alex Lytvynenko <oleksandr.lytvynenko@ibm.com>, Tomash Sidei <tomash.sidei@ibm.com>"
 
-# Install varnish so varnishstat and the varnish/vcache users match the varnishd image (VSM access).
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
-    libc6 libedit2 libncursesw6 libtinfo6 libvarnishapi3 varnish \
-    && rm -rf /var/lib/apt/lists/* /etc/varnish/* \
-    && mkdir -p /etc/varnish /var/lib/varnish \
-    && chown -R varnish:varnish /etc/varnish /var/lib/varnish
+COPY docker/install-varnish-9.sh /tmp/install-varnish-9.sh
+RUN chmod +x /tmp/install-varnish-9.sh \
+    && VARNISH_VERSION_NUMBER="${VARNISH_VERSION_NUMBER}" /tmp/install-varnish-9.sh tools \
+    && rm /tmp/install-varnish-9.sh
 
 COPY --from=builder /prometheus-varnish-exporter /usr/bin/
 RUN chown varnish:varnish /usr/bin/prometheus-varnish-exporter

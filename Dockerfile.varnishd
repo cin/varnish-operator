@@ -1,13 +1,13 @@
 ARG BUILDPLATFORM=linux/amd64
+ARG VARNISH_VERSION_NUMBER=9.0.3-1
 FROM --platform=$BUILDPLATFORM debian:trixie-slim
 LABEL maintainer="Alex Lytvynenko <oleksandr.lytvynenko@ibm.com>, Tomash Sidei <tomash.sidei@ibm.com>"
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
-    varnish \
-    varnish-modules \
-    && rm -rf /var/lib/apt/lists/* /etc/varnish/* \
-    && chown -R varnish:varnish /etc/varnish /var/lib/varnish
+COPY docker/install-varnish-9.sh /tmp/install-varnish-9.sh
+RUN chmod +x /tmp/install-varnish-9.sh \
+    && VARNISH_VERSION_NUMBER="${VARNISH_VERSION_NUMBER}" /tmp/install-varnish-9.sh minimal \
+    && rm /tmp/install-varnish-9.sh
 
 USER varnish
 
-ENTRYPOINT ["varnishd"]
+ENTRYPOINT ["/usr/sbin/varnishd"]

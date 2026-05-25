@@ -63,6 +63,11 @@ var _ = Describe("the ConfigMap", func() {
 			cmLabels := vclabels.CombinedComponentLabels(newVC, vcapi.VarnishComponentVCLFileConfigMap)
 
 			Expect(cm.Labels).To(Equal(cmLabels))
+			Expect(cm.Data).To(HaveKey(*newVC.Spec.VCL.EntrypointFileName))
+			Expect(cm.Data).To(HaveKey("backends.vcl.tmpl"))
+			entrypoint := cm.Data[*newVC.Spec.VCL.EntrypointFileName]
+			Expect(entrypoint).To(ContainSubstring("return (ok);"))
+			Expect(entrypoint).To(ContainSubstring("return (hash);"))
 		})
 	})
 

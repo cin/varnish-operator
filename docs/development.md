@@ -127,7 +127,7 @@ This produces:
 | `cinple/varnish-controller:local` | `Dockerfile.controller` |
 | `cinple/varnish-metrics-exporter:local` | `Dockerfile.exporter` |
 
-Override images in your `VarnishCluster`:
+Override images in your `VarnishCluster` (see [Custom container images](custom-images.md) for defaults, naming rules, and what custom images must provide):
 
 ```yaml
 spec:
@@ -141,9 +141,13 @@ spec:
 
 If you reuse the same tag, set `spec.statefulSet.container.imagePullPolicy: Always` and restart pods (or delete them) so Kubernetes pulls the new layers.
 
-Varnish pod images (`varnish`, `varnish-controller`, `varnish-metrics-exporter`) are based on **Debian trixie** and ship **Varnish 7.x** from Debian packages. Rebuild all three together when upgrading Varnish.
+Varnish pod images (`varnish`, `varnish-controller`, `varnish-metrics-exporter`) are based on **Debian trixie** and ship **Varnish 9.0.3** from [packages.varnish-software.com](https://packages.varnish-software.com/) (see `docker/install-varnish-9.sh`). Rebuild all three together when upgrading Varnish. Override the pin with build-arg `VARNISH_VERSION_NUMBER` (default `9.0.3-1`).
 
-Those images run as the Debian **`varnish` user (UID/GID 997)**, not root. The StatefulSet sets `runAsNonRoot`, `runAsUser`/`runAsGroup` 997, drops capabilities, and uses `fsGroup` 997 on shared volumes so sidecars can read the Varnish workdir without a custom root user.
+Those images run as the **`varnish` user (UID/GID 1000)** from the Varnish Software packages, not root. The StatefulSet sets `runAsNonRoot`, `runAsUser`/`runAsGroup` 1000, drops capabilities, and uses `fsGroup` 1000 on shared volumes so sidecars can read the Varnish workdir.
+
+```bash
+docker build --build-arg VARNISH_VERSION_NUMBER=9.0.3-1 -f Dockerfile.varnishd .
+```
 
 The metrics exporter image accepts `PROMETHEUS_VARNISH_EXPORTER_VERSION` and `PROMETHEUS_VARNISH_EXPORTER_REPO` as build arguments (defaults: `v1.8.3` from [otto-de/prometheus_varnish_exporter](https://github.com/otto-de/prometheus_varnish_exporter)):
 
@@ -152,7 +156,24 @@ docker build --build-arg PROMETHEUS_VARNISH_EXPORTER_VERSION=v1.8.3 \
   -t my-exporter:local -f Dockerfile.exporter .
 ```
 
-When upgrading from Varnish 6 images, review custom VCL for [Varnish 7 changes](https://varnish-cache.org/docs/7.0/whats-new/upgrading-7.0.html) (notably PCRE2 regex behavior).
+When upgrading from older Varnish images, review custom VCL for [Varnish 7](https://varnish-cache.org/docs/7.0/whats-new/upgrading-7.0.html) and [Varnish 9](https://varnish-cache.org/docs/9.0/whats-new/upgrading-9.0.html) release notes (PCRE2, removed APIs, etc.). Expect a cold cache after rollout; the default workdir is `emptyDir`.
+
+### Default VCL on a dev cluster
+
+`./hack/create_dev_cluster.sh -v` creates a `VarnishCluster` that references `vcl-config` / `entrypoint.vcl`. If that ConfigMap does not exist, the operator seeds the [default VCL](../pkg/varnishcluster/controller/varnishcluster_default_vcl.go) (`import var`, `directors` round-robin backends, `/heartbeat`, `/liveness`, `X-Varnish-Cache`).
+
+Manual smoke test (after `-b` and `-v`):
+
+```bash
+export KUBECONFIG=./e2e-tests-kubeconfig
+kubectl port-forward -n varnish-cluster svc/varnishcluster-example 8080:80
+
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8080/heartbeat   # 200
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8080/liveness    # 200
+curl -sI http://127.0.0.1:8080/ | grep -i x-varnish-cache                  # MISS then HIT
+```
+
+Automated coverage: `go test ./tests -ginkgo.focus="operator default VCL"` (requires `make e2e-tests` or an equivalent cluster).
 
 ## Code generation and manifests
 

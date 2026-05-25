@@ -1,5 +1,9 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+KUBECONFIG_FILE="${ROOT_DIR}/e2e-tests-kubeconfig"
+
 cluster_name="e2e-tests"
 
 function usage {
@@ -22,6 +26,6 @@ done
 
 kind delete cluster --name $cluster_name > /dev/null 2>&1
 
-if [[ -f ./e2e-tests-kubeconfig ]]; then
- rm -f ./e2e-tests-kubeconfig
+if [[ -f "${KUBECONFIG_FILE}" ]]; then
+  rm -f "${KUBECONFIG_FILE}"
 fi

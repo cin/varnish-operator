@@ -166,6 +166,13 @@ func StartTestManager(mgr manager.Manager) chan struct{} {
 	return stop
 }
 
+func waitUntilSecretRemoved(name, namespace string) {
+	Eventually(func() bool {
+		err := k8sClient.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, &v1.Secret{})
+		return errors.IsNotFound(err)
+	}, time.Second*5).Should(BeTrue())
+}
+
 // As the test control plane doesn't support garbage collection, this function is used to clean up resources
 // Designed to not fail if the resource is not found
 func CleanUpCreatedResources(vcName, vcNamespace string) {
@@ -228,7 +235,12 @@ func CleanUpCreatedResources(vcName, vcNamespace string) {
 	Expect(err).To(BeNil())
 	err = k8sClient.DeleteAllOf(context.Background(), &apps.StatefulSet{}, client.InNamespace(vcNamespace))
 	Expect(err).To(BeNil())
+	_ = k8sClient.Delete(context.Background(), &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Name: names.VarnishSecret(vcName), Namespace: vcNamespace},
+	})
+	waitUntilSecretRemoved(names.VarnishSecret(vcName), vcNamespace)
 	err = k8sClient.DeleteAllOf(context.Background(), &v1.Secret{}, client.InNamespace(vcNamespace))
 	Expect(err).To(haveNoErrorOrNotFoundError)
+	waitUntilSecretRemoved(names.VarnishSecret(vcName), vcNamespace)
 	_ = k8sClient.Delete(context.Background(), &schedulingv1.PriorityClass{ObjectMeta: metav1.ObjectMeta{Name: "test-priorityclass"}})
 }
