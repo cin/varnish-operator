@@ -141,12 +141,18 @@ spec:
 
 If you reuse the same tag, set `spec.statefulSet.container.imagePullPolicy: Always` and restart pods (or delete them) so Kubernetes pulls the new layers.
 
-The metrics exporter image accepts `PROMETHEUS_VARNISH_EXPORTER_VERSION` as a build argument:
+Varnish pod images (`varnish`, `varnish-controller`, `varnish-metrics-exporter`) are based on **Debian trixie** and ship **Varnish 7.x** from Debian packages. Rebuild all three together when upgrading Varnish.
+
+Those images run as the Debian **`varnish` user (UID/GID 997)**, not root. The StatefulSet sets `runAsNonRoot`, `runAsUser`/`runAsGroup` 997, drops capabilities, and uses `fsGroup` 997 on shared volumes so sidecars can read the Varnish workdir without a custom root user.
+
+The metrics exporter image accepts `PROMETHEUS_VARNISH_EXPORTER_VERSION` and `PROMETHEUS_VARNISH_EXPORTER_REPO` as build arguments (defaults: `v1.8.3` from [otto-de/prometheus_varnish_exporter](https://github.com/otto-de/prometheus_varnish_exporter)):
 
 ```bash
-docker build --build-arg PROMETHEUS_VARNISH_EXPORTER_VERSION=1.6.1 \
+docker build --build-arg PROMETHEUS_VARNISH_EXPORTER_VERSION=v1.8.3 \
   -t my-exporter:local -f Dockerfile.exporter .
 ```
+
+When upgrading from Varnish 6 images, review custom VCL for [Varnish 7 changes](https://varnish-cache.org/docs/7.0/whats-new/upgrading-7.0.html) (notably PCRE2 regex behavior).
 
 ## Code generation and manifests
 
@@ -190,11 +196,13 @@ Without `KUBEBUILDER_ASSETS`, the envtest-based controller suite will fail to st
 
 E2e tests create a kind cluster, build all images, install the operator from the local Helm chart, and run tests in `./tests`.
 
+**Recommended for full rebuilds** (operator, `varnish`, `varnish-controller`, metrics exporter, or Helm chart changes):
+
 ```bash
 make e2e-tests
 ```
 
-This runs `hack/create_dev_cluster.sh`, executes tests with `KUBECONFIG=./e2e-tests-kubeconfig`, then tears the cluster down.
+This runs `hack/create_dev_cluster.sh` (which **deletes and recreates** the `e2e-tests` kind cluster, rebuilds all pod images, loads them into kind, and installs the operator), runs tests with `KUBECONFIG=./e2e-tests-kubeconfig`, then tears the cluster down. You do not need a separate `helm upgrade` or manual StatefulSet rollout—recreating the cluster picks up new images and reconciled manifests.
 
 Use a specific Kubernetes version (must be a valid `kindest/node` tag—see [Kubernetes versions in tests](#kubernetes-versions-in-tests)):
 
@@ -206,17 +214,19 @@ For versions without a pre-built `kindest/node` image, the dev script builds the
 
 The helper script builds images as `cinple/*:local` and sets `imagePullPolicy=Never` so kind can use locally built images.
 
-Manual workflow:
+Manual workflow (same cluster setup as `make e2e-tests`, without the final teardown):
 
 ```bash
 ./hack/create_dev_cluster.sh
-KUBECONFIG=./e2e-tests-kubeconfig go test ./tests
+go test ./tests   # uses ./e2e-tests-kubeconfig when present (run from repo root)
 ./hack/delete_dev_cluster.sh
 ```
 
-Optional flags for `create_dev_cluster.sh`:
+`go test ./tests` alone (without a cluster or kubeconfig) fails immediately. Either use `make e2e-tests`, or run `create_dev_cluster.sh` first so `./e2e-tests-kubeconfig` exists and the kind cluster `e2e-tests` is up with the operator installed. You can still set `KUBECONFIG` explicitly if the file lives elsewhere.
 
-* `-s` — skip Docker build (images must already exist locally)
+Optional flags for `create_dev_cluster.sh` (when not using the full `make e2e-tests` target):
+
+* `-s` — skip Docker build (images must already exist locally; cluster is still recreated)
 * `-v` — create a sample `VarnishCluster`
 * `-b` — create nginx backend deployments
 

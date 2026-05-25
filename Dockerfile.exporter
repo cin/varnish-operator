@@ -1,24 +1,31 @@
 ARG BUILDPLATFORM=linux/amd64
-FROM --platform=$BUILDPLATFORM golang:1.20-bullseye AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS builder
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
-ARG PROMETHEUS_VARNISH_EXPORTER_VERSION=1.6.1
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends varnish curl tar gzip ca-certificates
+ARG PROMETHEUS_VARNISH_EXPORTER_VERSION=v1.8.3
+ARG PROMETHEUS_VARNISH_EXPORTER_REPO=https://github.com/otto-de/prometheus_varnish_exporter.git
 
-RUN git clone --branch $PROMETHEUS_VARNISH_EXPORTER_VERSION --single-branch https://github.com/jonnenauha/prometheus_varnish_exporter.git \
-  && cd prometheus_varnish_exporter \
-  && CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /prometheus-varnish-exporter
-
-FROM --platform=$BUILDPLATFORM debian:bullseye-slim
-LABEL maintainer="Alex Lytvynenko <oleksandr.lytvynenko@ibm.com>, Tomash Sidei <tomash.sidei@ibm.com>"
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends libc6 libedit2 libncursesw6 libtinfo6 libvarnishapi2 \
-    && adduser --quiet --system --no-create-home --home /nonexistent --group varnish \
-    && mkdir -p /etc/varnish /var/lib/varnish \
-    && chown -R varnish /etc/varnish /var/lib/varnish \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+RUN git clone --branch "${PROMETHEUS_VARNISH_EXPORTER_VERSION}" --single-branch "${PROMETHEUS_VARNISH_EXPORTER_REPO}" /src/prometheus_varnish_exporter
+
+WORKDIR /src/prometheus_varnish_exporter
+
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /prometheus-varnish-exporter .
+
+FROM --platform=$BUILDPLATFORM debian:trixie-slim
+LABEL maintainer="Alex Lytvynenko <oleksandr.lytvynenko@ibm.com>, Tomash Sidei <tomash.sidei@ibm.com>"
+
+# Install varnish so varnishstat and the varnish/vcache users match the varnishd image (VSM access).
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+    libc6 libedit2 libncursesw6 libtinfo6 libvarnishapi3 varnish \
+    && rm -rf /var/lib/apt/lists/* /etc/varnish/* \
+    && mkdir -p /etc/varnish /var/lib/varnish \
+    && chown -R varnish:varnish /etc/varnish /var/lib/varnish
+
 COPY --from=builder /prometheus-varnish-exporter /usr/bin/
-COPY --from=builder /usr/bin/varnishadm /usr/bin/varnishstat /usr/bin/
+RUN chown varnish:varnish /usr/bin/prometheus-varnish-exporter
 
 USER varnish
 

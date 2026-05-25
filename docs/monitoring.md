@@ -43,7 +43,7 @@ The chart is not a complete solution and intended to be modified to the end user
 
 ## Varnish Monitoring
 
-Each Varnish pod has a [Varnish Prometheus metrics exporter](https://github.com/jonnenauha/prometheus_varnish_exporter) built-in. They exporter port is exposed by the `VarnishCluster` on port `9131` by default. It can be changed by setting the `spec.service.prometheusExporterPort` field in the [`VarnishCluster` spec](varnish-cluster-configuration.md).
+Each Varnish pod has a [Varnish Prometheus metrics exporter](https://github.com/otto-de/prometheus_varnish_exporter) built-in. They exporter port is exposed by the `VarnishCluster` on port `9131` by default. It can be changed by setting the `spec.service.prometheusExporterPort` field in the [`VarnishCluster` spec](varnish-cluster-configuration.md).
 
 The service port can be used to setup metrics scraping using [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator) `ServiceMonitor`.  
 

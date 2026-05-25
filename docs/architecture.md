@@ -22,7 +22,7 @@ The containers share specific volumes for the varnish configuration and work dir
 
 ##### Varnish
 
-The Varnish process itself. Currently only Varnish version `6.5.1` is supported. The operator doesn't support arbitrary Varnish images due to additional components needed for the operator to function. The container image is custom built with varnish and varnish modules preinstalled.
+The Varnish process itself. Varnish **7.x** is supported (images use Debian trixie packages, currently **7.7**). The operator doesn't support arbitrary Varnish images due to additional components needed for the operator to function. The container image is custom built with `varnish` and `varnish-modules` preinstalled.
 
 ##### Varnish-Controller
 
@@ -30,4 +30,4 @@ Varnish-Controller is a process which watches the resources needed to build the 
 
 ##### Prometheus metrics exporter
 
-The pod also includes a [Prometheus metrics exporter](https://github.com/jonnenauha/prometheus_varnish_exporter) process image for Varnish instances. The Service port it is listening on is configurable in the [VarnishCluster spec](varnish-cluster-configuration.md).
+The pod also includes a [Prometheus metrics exporter](https://github.com/otto-de/prometheus_varnish_exporter) process image for Varnish instances. The Service port it is listening on is configurable in the [VarnishCluster spec](varnish-cluster-configuration.md).

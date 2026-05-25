@@ -9,9 +9,9 @@ The purpose of the project is to provide a convenient way to deploy and manage V
 
 Kubernetes version `>=1.29.0` is supported (see the operator bundle `minKubeVersion`). CI runs e2e against Kubernetes 1.34.3 and 1.35.1, and unit tests use envtest 1.36.0—see [docs/development.md](docs/development.md#kubernetes-versions-in-tests) for why those version numbers differ.
 
-Varnish version 6.5.1 is supported.
+Varnish version 7.x is supported (container images ship Debian trixie packages, currently Varnish 7.7).
 
-Full documentation can be found [here](https://ibm.github.io/varnish-operator/)
+Full documentation can be found [here](https://cin.github.io/varnish-operator/)
 
 ### Overview
 
@@ -33,5 +33,5 @@ The operator manages the whole lifecycle of the cluster: creating, deleting and 
 
 ### Further reading
 
-* [QuickStart](https://ibm.github.io/varnish-operator/quick-start.html)
-* [Contributing](https://ibm.github.io/varnish-operator/development.html)
+* [QuickStart](https://cin.github.io/varnish-operator/quick-start.html)
+* [Contributing](https://cin.github.io/varnish-operator/development.html)

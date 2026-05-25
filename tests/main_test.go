@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/onsi/ginkgo/v2/types"
@@ -11,6 +12,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 
 	vcapi "github.com/cin/varnish-operator/api/v1alpha1"
 	"github.com/cin/varnish-operator/pkg/logger"
@@ -27,6 +29,43 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+const defaultE2EKubeconfig = "e2e-tests-kubeconfig"
+
+func e2eRestConfig() (*rest.Config, error) {
+	kubeconfig := os.Getenv("KUBECONFIG")
+	if kubeconfig == "" {
+		if _, err := os.Stat(defaultE2EKubeconfig); err == nil {
+			abs, err := filepath.Abs(defaultE2EKubeconfig)
+			if err != nil {
+				return nil, err
+			}
+			kubeconfig = abs
+		}
+	}
+
+	if kubeconfig != "" {
+		return clientcmd.BuildConfigFromFlags("", kubeconfig)
+	}
+
+	return ctrl.GetConfig()
+}
+
+func e2eConfigHint(err error) string {
+	return fmt.Sprintf(`%v
+
+E2E tests need a Kubernetes cluster with the operator installed (not unit/envtest).
+
+From the repo root, either run the full workflow:
+  make e2e-tests
+
+Or prepare the cluster and re-run tests:
+  ./hack/create_dev_cluster.sh
+  KUBECONFIG=./e2e-tests-kubeconfig go test ./tests
+  ./hack/delete_dev_cluster.sh
+
+For an existing cluster, set KUBECONFIG or install the operator per docs/development.md.`, err)
+}
 
 const (
 	debugLogsDir = "/tmp/debug-logs/"
@@ -54,9 +93,9 @@ var _ = BeforeSuite(func() {
 	err = vcapi.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	restConfig, err = ctrl.GetConfig()
+	restConfig, err = e2eRestConfig()
 	if err != nil {
-		logr.Fatalf("unable to set up client config: %v", err)
+		logr.Fatalf("%s", e2eConfigHint(err))
 	}
 
 	k8sClient, err = client.New(restConfig, client.Options{Scheme: scheme.Scheme})

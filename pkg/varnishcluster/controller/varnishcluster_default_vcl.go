@@ -10,6 +10,7 @@ include "backends.vcl";
 
 sub vcl_init {
   call init_backends;
+  return (ok);
 }
 
 sub vcl_recv {
@@ -39,6 +40,8 @@ sub vcl_recv {
   if (req.url ~ "health") {
     return (pass);
   }
+
+  return (hash);
 }
 
 sub vcl_synth {
