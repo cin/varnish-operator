@@ -93,9 +93,12 @@ endif
 varnish-controller: fmt vet
 	go build -o ${ROOT_DIR}bin/varnish-controller ${ROOT_DIR}cmd/varnish-controller/
 
+VARNISH_VERSION_NUMBER ?= 9.0.3-1
+
 # Build the docker image with varnishd itself and varnish modules
 docker-build-varnish:
-	docker build --platform ${PLATFORM} ${ROOT_DIR} -t ${VARNISH_IMG} -f Dockerfile.varnishd
+	docker build --platform ${PLATFORM} ${ROOT_DIR} -t ${VARNISH_IMG} -f Dockerfile.varnishd \
+		--build-arg VARNISH_VERSION_NUMBER=${VARNISH_VERSION_NUMBER}
 
 docker-tag-push-varnish:
 ifndef PUBLISH
@@ -108,7 +111,8 @@ endif
 
 # Build the docker image with varnish controller
 docker-build-varnish-controller: fmt vet
-	docker build --platform ${PLATFORM} ${ROOT_DIR} -t ${VARNISH_CONTROLLER_IMG} -f Dockerfile.controller
+	docker build --platform ${PLATFORM} ${ROOT_DIR} -t ${VARNISH_CONTROLLER_IMG} -f Dockerfile.controller \
+		--build-arg VARNISH_VERSION_NUMBER=${VARNISH_VERSION_NUMBER}
 
 docker-tag-push-varnish-controller:
 ifndef PUBLISH
@@ -123,6 +127,7 @@ endif
 PROMETHEUS_VARNISH_EXPORTER_VERSION ?= v1.8.3
 docker-build-varnish-exporter:
 	docker build --platform ${PLATFORM} ${ROOT_DIR} -t ${VARNISH_METRICS_IMG} -f Dockerfile.exporter \
+		--build-arg VARNISH_VERSION_NUMBER=${VARNISH_VERSION_NUMBER} \
 		--build-arg PROMETHEUS_VARNISH_EXPORTER_VERSION=${PROMETHEUS_VARNISH_EXPORTER_VERSION}
 
 docker-tag-push-varnish-exporter:

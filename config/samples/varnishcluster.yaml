@@ -9,9 +9,11 @@ spec:
 #  updateStrategy:
 #    type: "OnDelete" #can be "OnDelete", "RollingUpdate" and "DelayedRollingUpdate"
   varnish:
-    # path to image + tag
-#    image: cinple/varnish:0.27.2
+    # Optional: override images (tag = operator release, e.g. 0.38.0 or local—not Varnish 9.0.3).
+    # Sidecars default to varnish-controller:<tag> and varnish-metrics-exporter:<tag>. See docs/custom-images.md.
+#    image: cinple/varnish:0.38.0
 #    imagePullPolicy: Always
+#    imagePullSecret: regcred
     # Resources allocated to the Varnish pod through Kubernetes. It is strongly recommended that you specify resources,
     # since Varnish is an in-memory cache, and you do not want it restarting frequently.
     #resources:
@@ -28,7 +30,7 @@ spec:
     # and defines the container's resources allocation.
 #    controller:
       #  # path to image + tag to override, by default it refers to varnish.image with "-controller" suffix image.
-#      image: cinple/varnish-controller:0.27.2
+#      image: cinple/varnish-controller:0.38.0
       #  # imagePullPolicy controls how the varnish-controller image will be pulled for new containers
       #  imagePullPolicy: Always
       #  # Resources allocated to the Varnish controller container through Kubernetes.
@@ -44,7 +46,7 @@ spec:
 
 #    metricsExporter:
       #  # path to image + tag to override, by default it refers to varnish.image with "-metrics-exporter" suffix image.
-#      image: cinple/varnish-metrics-exporter:0.27.2
+#      image: cinple/varnish-metrics-exporter:0.38.0
       #  # imagePullPolicy controls how the varnish-metrics-exporter image will be pulled for new containers
       #  imagePullPolicy: Always
       #  # Resources allocated to the Varnish metrics exporter container through Kubernetes.

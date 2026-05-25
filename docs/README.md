@@ -40,7 +40,7 @@ spec:
     port: 80
 ```
 
-See the [VarnishCluster configuration section](varnish-cluster-configuration.md) for more details about the `VarnishCluster` spec.
+See the [VarnishCluster configuration section](varnish-cluster-configuration.md) for more details about the `VarnishCluster` spec. To use your own `varnish` / sidecar images, see [Custom container images](custom-images.md).
 
 ### VCL configuration
 
@@ -59,6 +59,7 @@ See the [VCL files configuration](vcl-configuration.md) section for more details
 
 * [Quickstart](quick-start.md)
 * [VarnishCluster configuration](varnish-cluster-configuration.md)
+* [Custom container images](custom-images.md)
 * [Varnish operator configuration](operator-configuration.md)
 * [VCL files configuration](vcl-configuration.md)
 * [Contribution](development.md)

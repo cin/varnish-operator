@@ -22,7 +22,7 @@ The containers share specific volumes for the varnish configuration and work dir
 
 ##### Varnish
 
-The Varnish process itself. Varnish **7.x** is supported (images use Debian trixie packages, currently **7.7**). The operator doesn't support arbitrary Varnish images due to additional components needed for the operator to function. The container image is custom built with `varnish` and `varnish-modules` preinstalled.
+The Varnish process itself. Varnish **9.x** is supported (default images install **9.0.3** from [packages.varnish-software.com](https://packages.varnish-software.com/) on Debian trixie, plus `varnish-modules`). You may set `spec.varnish.image` (and sidecar images) to your own registry, but all three pod images must stay compatible with the operator’s layout—see [Custom container images](custom-images.md).
 
 ##### Varnish-Controller
 
