@@ -24,15 +24,13 @@ jobs:
       - name: Helm lint
         run: helm lint varnish-operator
       - name: Ensure helm-releases folder exists
+        if: github.event_name == 'release' && github.event.action == 'created'
         run: mkdir -p helm-releases
       - name: Get version
-        run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
-          else
-            echo "VERSION=v0.0.0-${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
-          fi
+        if: github.event_name == 'release' && github.event.action == 'created'
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
       - name: Change versions
+        if: github.event_name == 'release' && github.event.action == 'created'
         run: |
           curl -fsSL -o ./yq https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64
           chmod +x ./yq
@@ -40,6 +38,7 @@ jobs:
           ./yq w -i varnish-operator/Chart.yaml version "$VERSION"
           ./yq w -i varnish-operator/values.yaml container.tag "$VERSION"
       - name: Package chart
+        if: github.event_name == 'release' && github.event.action == 'created'
         run: |
           git config user.email "actions@github.com"
           git config user.name "github-actions[bot]"
