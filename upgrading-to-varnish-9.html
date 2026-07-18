@@ -1,0 +1,527 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <title>Upgrading to Varnish 9 · Varnish Operator Docs</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="HonKit 6.2.2">
+        
+        
+        
+    
+    <link rel="stylesheet" href="gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-hints/plugin-hints.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/@honkit/honkit-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/@honkit/honkit-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="vcl-configuration.html" />
+    
+    
+    <link rel="prev" href="custom-images.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book honkit-cloak">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="quick-start.html">
+            
+                <a href="quick-start.html">
+            
+                    
+                    Quick Start
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="installation.html">
+            
+                <a href="installation.html">
+            
+                    
+                    Installation
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="operator-configuration.html">
+            
+                <a href="operator-configuration.html">
+            
+                    
+                    Operator Configuration
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="varnish-cluster.html">
+            
+                <a href="varnish-cluster.html">
+            
+                    
+                    VarnishCluster
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="varnish-cluster-configuration.html">
+            
+                <a href="varnish-cluster-configuration.html">
+            
+                    
+                    VarnishCluster Configuration
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="custom-images.html">
+            
+                <a href="custom-images.html">
+            
+                    
+                    Custom container images
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.8" data-path="upgrading-to-varnish-9.html">
+            
+                <a href="upgrading-to-varnish-9.html">
+            
+                    
+                    Upgrading to Varnish 9
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.9" data-path="vcl-configuration.html">
+            
+                <a href="vcl-configuration.html">
+            
+                    
+                    VCL Configuration
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.10" data-path="monitoring.html">
+            
+                <a href="monitoring.html">
+            
+                    
+                    Monitoring
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.11" data-path="debugging-issues.html">
+            
+                <a href="debugging-issues.html">
+            
+                    
+                    Debugging Issues
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.12" data-path="architecture.html">
+            
+                <a href="architecture.html">
+            
+                    
+                    Architecture
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.13" data-path="development.html">
+            
+                <a href="development.html">
+            
+                    
+                    Development
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://github.com/honkit/honkit" target="blank" class="gitbook-link">
+            Published with HonKit
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="." >Upgrading to Varnish 9</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="upgrading-to-varnish-9">Upgrading to Varnish 9</h1>
+<p>This guide is for operators of existing <code>VarnishCluster</code> deployments running images based on Varnish 6.x or 7.x who are moving to an operator release that ships <strong>Varnish 9</strong> (currently <strong>9.0.3</strong> from <a href="https://packages.varnish-software.com/" target="_blank">packages.varnish-software.com</a>).</p>
+<p>Read the whole guide before starting: some changes (VCL syntax, custom image UIDs) must be prepared <strong>before</strong> rolling any pods.</p>
+<h2 id="tldr-checklist">TL;DR checklist</h2>
+<ul>
+<li>[ ] Review your VCL against the <a href="https://varnish-cache.org/docs/7.0/whats-new/upgrading-7.0.html" target="_blank">Varnish 7</a> and <a href="https://varnish-cache.org/docs/9.0/whats-new/upgrading-9.0.html" target="_blank">Varnish 9</a> upgrade notes; test compilation against a Varnish 9 image.</li>
+<li>[ ] If you use custom images or persistent volumes: prepare for the <strong>UID/GID change from 997 to 1000</strong>.</li>
+<li>[ ] Upgrade all three pod images (<code>varnish</code>, <code>varnish-controller</code>, <code>varnish-metrics-exporter</code>) <strong>together</strong>, using the same operator release tag.</li>
+<li>[ ] Plan for a <strong>cold cache</strong> during the rollout.</li>
+<li>[ ] Pick an update strategy (<code>OnDelete</code> default, <code>RollingUpdate</code>, or <code>DelayedRollingUpdate</code>) that matches your traffic pattern.</li>
+<li>[ ] After the rollout, verify metrics and dashboards (see <a href="monitoring.html">Monitoring</a>).</li>
+</ul>
+<h2 id="images-and-version-coupling">Images and version coupling</h2>
+<p>Container image tags follow the <strong>operator release</strong> (e.g. <code>0.38.0</code>), not the Varnish semver — see <a href="custom-images.html">Custom container images</a>. All three images in a Varnish pod must be built against the same Varnish version:</p>
+<table>
+<thead>
+<tr>
+<th>Container</th>
+<th>Why it must match</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>varnish</code></td>
+<td>Runs <code>varnishd</code> itself.</td>
+</tr>
+<tr>
+<td><code>varnish-controller</code></td>
+<td>Uses <code>varnishadm</code> / <code>varnishstat</code> and <code>libvarnishapi</code> (<code>libvarnishapi.so.3</code> on 9.x).</td>
+</tr>
+<tr>
+<td><code>varnish-metrics-exporter</code></td>
+<td>Uses <code>varnishstat</code> + <code>libvarnishapi</code> to scrape counters.</td>
+</tr>
+</tbody>
+</table>
+<p>Mixing a 9.x <code>varnishd</code> with sidecars built against 6.x/7.x breaks VCL reloads, readiness checks, and metrics. If you override any image in <code>spec.varnish</code>, update all overridden images in the same change.</p>
+<p>By default (no image overrides), the operator derives pod images from its own deployment image, so upgrading the operator Helm release is enough — but the pods still need to be restarted to pick up the new images (see <a href="#rollout">Rollout</a> below).</p>
+<h2 id="uidgid-change-997-→-1000">UID/GID change: 997 → 1000</h2>
+<p>Older operator releases ran Varnish pod containers as UID/GID <strong>997</strong>. Varnish 9 images use the <strong><code>varnish</code> user (UID/GID 1000)</strong> from the Varnish Software packages, and the operator now sets <code>runAsUser</code> / <code>runAsGroup</code> / <code>fsGroup</code> to <strong>1000</strong> on the StatefulSet.</p>
+<p>Impact:</p>
+<ul>
+<li><strong>Custom images</strong> must contain a user with UID/GID 1000 with read access to the shared workdir and secret volumes. See the <a href="custom-images.html#compatibility-requirements-for-custom-images">compatibility requirements</a>.</li>
+<li><strong>Persistent volumes</strong> (e.g. if you use the <code>file</code> storage backend or mount extra volumes into Varnish pods): files owned by 997 may become unreadable/unwritable. <code>fsGroup: 1000</code> handles volumes that support fsGroup-based relabeling; for volumes that do not (e.g. <code>hostPath</code>, some NFS setups), chown the data to 1000 before or during the rollout.</li>
+<li><strong>PodSecurityPolicies / security admission</strong> rules pinned to UID 997 need updating.</li>
+</ul>
+<p>The default cache workdir is an <code>emptyDir</code> recreated with each pod, so it needs no migration.</p>
+<h2 id="vcl-changes">VCL changes</h2>
+<p>Your VCL in the ConfigMap (<code>spec.vcl</code>) skips two major versions. Review the upstream upgrade notes for everything between your current and target versions, especially:</p>
+<ul>
+<li><strong><a href="https://varnish-cache.org/docs/7.0/whats-new/upgrading-7.0.html" target="_blank">Varnish 7</a></strong>: regular expressions moved to <strong>PCRE2</strong> (most patterns work unchanged, but some syntax/behavior differs), stricter VCL parsing, and changed defaults.</li>
+<li><strong><a href="https://varnish-cache.org/docs/9.0/whats-new/upgrading-9.0.html" target="_blank">Varnish 9</a></strong>: removed deprecated APIs and parameters, backend <strong>probe</strong> behavior changes, and vmod updates.</li>
+</ul>
+<p>Practical tips:</p>
+<ul>
+<li><p>Test-compile your VCL against a Varnish 9 image before touching the cluster:</p>
+<pre><code class="lang-bash">docker run --<span class="hljs-built_in">rm</span> -v <span class="hljs-string">"<span class="hljs-variable">$PWD</span>/vcl:/etc/varnish:ro"</span> &lt;your-varnish-9-image&gt; \
+  varnishd -C -f /etc/varnish/entrypoint.vcl
+</code></pre>
+</li>
+<li><p>If you use the operator's default VCL (no ConfigMap yet), no action is needed; the operator seeds a Varnish 9-compatible default.</p>
+</li>
+<li>After the rollout, watch the <code>varnish_vcl_compilation_error</code> metric (see <a href="monitoring.html">Monitoring</a>); it flips to <code>1</code> if a VCL reload fails on the new version.</li>
+</ul>
+<h2 id="cache-and-rollout">Cache and rollout</h2>
+<h3 id="cold-cache">Cold cache</h3>
+<p>Varnish is an in-memory cache and the default workdir is an <code>emptyDir</code>; every restarted pod starts with an <strong>empty cache</strong>. Expect elevated backend traffic and higher latency until the cache warms up. If your backends cannot absorb a full cache flush, roll pods gradually (see below) or pre-warm via synthetic traffic.</p>
+<h3 id="rollout">Rollout</h3>
+<p>The default update strategy is <strong><code>OnDelete</code></strong>: after upgrading the operator (and/or <code>spec.varnish.image</code>), pods keep running the old images until you delete them. This gives you full control over pacing:</p>
+<pre><code class="lang-bash">kubectl delete pod &lt;varnishcluster-name&gt;-varnish-2   <span class="hljs-comment"># highest ordinal first</span>
+<span class="hljs-comment"># wait for readiness + cache warm-up, then continue with the next pod</span>
+</code></pre>
+<p>StatefulSet ordering applies: with <code>RollingUpdate</code>-style strategies pods restart from the highest ordinal to the lowest. Readiness is gated on <code>varnishadm ping</code>, so a pod only receives traffic once <code>varnishd</code> responds on its admin interface — but readiness does <strong>not</strong> mean the cache is warm.</p>
+<p>For automated pacing use <strong><code>DelayedRollingUpdate</code></strong>, which waits a configurable delay between pod updates so each node can warm up before the next restarts:</p>
+<pre><code class="lang-yaml"><span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">updateStrategy:</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">DelayedRollingUpdate</span>
+    <span class="hljs-attr">delayedRollingUpdate:</span>
+      <span class="hljs-attr">delaySeconds:</span> <span class="hljs-number">300</span>
+</code></pre>
+<p>See <a href="varnish-cluster.html">VarnishCluster</a> for details on update strategies.</p>
+<p>If you need to drain traffic away from a pod before deleting it, remove it from the cache Service selector-based endpoints by cordoning at the LB level or scaling client traffic; the operator does not provide a built-in drain today.</p>
+<h2 id="monitoring">Monitoring</h2>
+<p>The bundled metrics exporter (<a href="https://github.com/otto-de/prometheus_varnish_exporter" target="_blank">otto-de/prometheus_varnish_exporter</a> v1.8.3) scrapes <code>varnishstat</code> dynamically, so core metrics keep working on Varnish 9. Some counter names change between Varnish major versions — review any custom alerts and dashboards against a running 9.x pod (<code>curl &lt;pod&gt;:9131/metrics</code>).</p>
+<p>The optional per-cluster Grafana dashboard (<code>spec.monitoring.grafanaDashboard</code>) requires the Prometheus Operator <code>ServiceMonitor</code> (<code>spec.monitoring.prometheusServiceMonitor</code>) plus Grafana dashboard discovery — see <a href="monitoring.html">Monitoring</a>.</p>
+<h2 id="verifying-the-upgrade">Verifying the upgrade</h2>
+<pre><code class="lang-bash"><span class="hljs-comment"># All pods ready on the new images</span>
+kubectl get pods -n &lt;ns&gt; -l varnish-component=varnish -o wide
+
+<span class="hljs-comment"># Varnish version inside a pod</span>
+kubectl <span class="hljs-built_in">exec</span> -n &lt;ns&gt; &lt;pod&gt; -c varnish -- varnishd -V
+
+<span class="hljs-comment"># VCL compiled and active</span>
+kubectl <span class="hljs-built_in">exec</span> -n &lt;ns&gt; &lt;pod&gt; -c varnish-controller -- varnishadm -n /var/lib/varnish vcl.list
+
+<span class="hljs-comment"># Metrics flowing</span>
+kubectl <span class="hljs-built_in">exec</span> -n &lt;ns&gt; &lt;pod&gt; -c varnish-metrics-exporter -- wget -qO- localhost:9131/metrics | <span class="hljs-built_in">head</span>
+</code></pre>
+<p><code>varnishd -V</code> should report <code>varnish-9.0.3</code>, and responses through the cache Service should carry <code>Via: 1.1 &lt;pod-name&gt; (Varnish/9.0)</code>.</p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="custom-images.html" class="navigation navigation-prev " aria-label="Previous page: Custom container images">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="vcl-configuration.html" class="navigation navigation-next " aria-label="Next page: VCL Configuration">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Upgrading to Varnish 9","level":"1.8","depth":1,"next":{"title":"VCL Configuration","level":"1.9","depth":1,"path":"vcl-configuration.md","ref":"vcl-configuration.md","articles":[]},"previous":{"title":"Custom container images","level":"1.7","depth":1,"path":"custom-images.md","ref":"custom-images.md","articles":[]},"dir":"ltr"},"config":{"plugins":["hints"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"hints":{"info":"fa fa-info-circle","tip":"fa fa-mortar-board","danger":"fa fa-exclamation-circle","working":"fa fa-wrench"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56},"embedFonts":false},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"Varnish Operator Docs","gitbook":"*"},"file":{"path":"upgrading-to-varnish-9.md","mtime":"2026-07-18T01:45:31.718Z","type":"markdown"},"gitbook":{"version":"6.2.2","time":"2026-07-18T01:45:39.768Z"},"basePath":".","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <noscript>
+        <style>
+            .honkit-cloak {
+                display: block !important;
+            }
+        </style>
+    </noscript>
+    <script>
+        // Restore sidebar state as critical path for prevent layout shift
+        function __init__getSidebarState(defaultValue){
+            var baseKey = "";
+            var key = baseKey + ":sidebar";
+            try {
+                var value = localStorage[key];
+                if (value === undefined) {
+                    return defaultValue;
+                }
+                var parsed = JSON.parse(value);
+                return parsed == null ? defaultValue : parsed;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        function __init__restoreLastSidebarState() {
+            var isMobile = window.matchMedia("(max-width: 600px)").matches;
+            if (isMobile) {
+                // Init last state if not mobile
+                return;
+            }
+            var sidebarState = __init__getSidebarState(true);
+            var book = document.querySelector(".book");
+            // Show sidebar if it enabled
+            if (sidebarState && book) {
+                book.classList.add("without-animation", "with-summary");
+            }
+        }
+
+        try {
+            __init__restoreLastSidebarState();
+        } finally {
+            var book = document.querySelector(".book");
+            book.classList.remove("honkit-cloak");
+        }
+    </script>
+    <script src="gitbook/gitbook.js"></script>
+    <script src="gitbook/theme.js"></script>
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="gitbook/@honkit/honkit-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

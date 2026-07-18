@@ -1,0 +1,704 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <title>Development · Varnish Operator Docs</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="HonKit 6.2.2">
+        
+        
+        
+    
+    <link rel="stylesheet" href="gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-hints/plugin-hints.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/@honkit/honkit-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/@honkit/honkit-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    
+    <link rel="prev" href="architecture.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book honkit-cloak">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="quick-start.html">
+            
+                <a href="quick-start.html">
+            
+                    
+                    Quick Start
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="installation.html">
+            
+                <a href="installation.html">
+            
+                    
+                    Installation
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="operator-configuration.html">
+            
+                <a href="operator-configuration.html">
+            
+                    
+                    Operator Configuration
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="varnish-cluster.html">
+            
+                <a href="varnish-cluster.html">
+            
+                    
+                    VarnishCluster
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="varnish-cluster-configuration.html">
+            
+                <a href="varnish-cluster-configuration.html">
+            
+                    
+                    VarnishCluster Configuration
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="custom-images.html">
+            
+                <a href="custom-images.html">
+            
+                    
+                    Custom container images
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8" data-path="upgrading-to-varnish-9.html">
+            
+                <a href="upgrading-to-varnish-9.html">
+            
+                    
+                    Upgrading to Varnish 9
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.9" data-path="vcl-configuration.html">
+            
+                <a href="vcl-configuration.html">
+            
+                    
+                    VCL Configuration
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.10" data-path="monitoring.html">
+            
+                <a href="monitoring.html">
+            
+                    
+                    Monitoring
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.11" data-path="debugging-issues.html">
+            
+                <a href="debugging-issues.html">
+            
+                    
+                    Debugging Issues
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.12" data-path="architecture.html">
+            
+                <a href="architecture.html">
+            
+                    
+                    Architecture
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.13" data-path="development.html">
+            
+                <a href="development.html">
+            
+                    
+                    Development
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://github.com/honkit/honkit" target="blank" class="gitbook-link">
+            Published with HonKit
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="." >Development</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="development">Development</h1>
+<p>This guide covers building, testing, and running the varnish-operator locally.</p>
+<p>For installing a released build in a cluster, see <a href="installation.html">Installation</a>.</p>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li><strong>Go 1.26+</strong></li>
+<li><strong>Kubernetes 1.29+</strong> cluster and <code>kubectl</code> configured ( <a href="https://kind.sigs.k8s.io/" target="_blank">kind</a>, <a href="https://minikube.sigs.k8s.io/" target="_blank">minikube</a>, or an existing cluster)</li>
+<li><strong>Docker</strong> (or podman) for image builds and e2e tests</li>
+<li><strong>Helm 3</strong> for deploying the operator chart</li>
+<li><strong>kind</strong> v0.20+ for end-to-end tests</li>
+<li><strong>golangci-lint</strong> v2.9+ for <code>make lint</code> (must be built with Go 1.26+ to match <code>go.mod</code>)</li>
+<li><strong>operator-sdk</strong> v1.42+ and <strong>yq</strong> for <code>make bundle</code> (installed separately)</li>
+<li><strong>setup-envtest</strong> for controller unit tests (see <a href="#unit-tests">Unit tests</a>)</li>
+</ul>
+<p>The Makefile downloads pinned versions of <strong>controller-gen</strong>, <strong>kustomize</strong>, and <strong>goimports</strong> into <code>./bin/</code> on first use. You do not need to install kubebuilder.</p>
+<h2 id="code-structure">Code structure</h2>
+<p>The project consists of two components:</p>
+<ul>
+<li><strong>Varnish operator</strong> — watches <code>VarnishCluster</code> resources and manages cluster infrastructure (StatefulSet, Services, RBAC, VCL ConfigMap, and so on).</li>
+<li><strong>Varnish controller</strong> — runs inside each Varnish pod. It watches Kubernetes resources and reloads VCL when backends, VCL files, or cluster membership change.</li>
+</ul>
+<p>Both components share one repository, dependencies, and build tooling.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Source</th>
+<th>Entry point</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Operator</td>
+<td><code>pkg/varnishcluster/</code></td>
+<td><code>cmd/varnish-operator/main.go</code></td>
+</tr>
+<tr>
+<td>Varnish controller</td>
+<td><code>pkg/varnishcontroller/</code></td>
+<td><code>cmd/varnish-controller/main.go</code></td>
+</tr>
+</tbody>
+</table>
+<p>Kubebuilder/operator-sdk scaffolding lives under <code>config/</code> (CRDs, RBAC, bundle manifests). The Helm chart is in <code>varnish-operator/</code>.</p>
+<h2 id="clone-and-setup">Clone and setup</h2>
+<pre><code class="lang-bash">git <span class="hljs-built_in">clone</span> https://github.com/cin/varnish-operator.git
+<span class="hljs-built_in">cd</span> varnish-operator
+go mod download
+</code></pre>
+<h2 id="running-the-operator-locally">Running the operator locally</h2>
+<p>Running the operator on your machine against a real cluster is the fastest way to iterate on operator code. Your local kubeconfig credentials are used instead of in-cluster RBAC.</p>
+<h3 id="install-the-crd">Install the CRD</h3>
+<pre><code class="lang-bash">make install
+</code></pre>
+<p>This applies the <code>VarnishCluster</code> CRD (<code>varnishclusters.caching.ibm.com</code>). Re-run after CRD schema changes.</p>
+<p>Verify:</p>
+<pre><code class="lang-bash">kubectl get crd varnishclusters.caching.ibm.com
+</code></pre>
+<h3 id="start-the-operator">Start the operator</h3>
+<pre><code class="lang-bash">make run
+</code></pre>
+<p>By default the operator watches the <code>default</code> namespace. Override with:</p>
+<pre><code class="lang-bash">NAMESPACE=varnish-operator make run
+</code></pre>
+<p><code>make run</code> sets <code>LEADERELECTION_ENABLED=false</code> and <code>WEBHOOKS_ENABLED=false</code> for simpler local development. The coupled Varnish image defaults to <code>cinple/varnish:local-dev</code> via the <code>REPO</code> and <code>VARNISH_IMG</code> Makefile variables.</p>
+<p>After code changes, stop the process and run <code>make run</code> again.</p>
+<h3 id="what-local-run-cannot-test">What local run cannot test</h3>
+<p>Some behavior only works when the operator runs as a pod with its ServiceAccount and webhooks enabled:</p>
+<ul>
+<li>Validating and mutating webhooks (<code>WEBHOOKS_ENABLED=true</code>, plus TLS certs)</li>
+<li>In-cluster RBAC (local run uses your kubeconfig user, not the operator ClusterRole)</li>
+</ul>
+<p>For those cases, build and deploy the operator image (below).</p>
+<h2 id="deploying-the-operator-in-a-cluster">Deploying the operator in a cluster</h2>
+<p>Build and load the operator image, regenerate manifests, and install with Helm:</p>
+<pre><code class="lang-bash"><span class="hljs-comment"># Build operator image (runs unit tests first)</span>
+make docker-build REPO=cinple VERSION=<span class="hljs-built_in">local</span>
+
+<span class="hljs-comment"># Regenerate CRD and ClusterRole in the Helm chart</span>
+make manifests
+
+<span class="hljs-comment"># Install or upgrade via Helm</span>
+helm upgrade --install varnish-operator ./varnish-operator \
+  --namespace varnish-operator --create-namespace \
+  --<span class="hljs-built_in">set</span> container.registry=cinple \
+  --<span class="hljs-built_in">set</span> container.repository=varnish-operator \
+  --<span class="hljs-built_in">set</span> container.tag=<span class="hljs-built_in">local</span>
+</code></pre>
+<p>Check logs:</p>
+<pre><code class="lang-bash">kubectl logs -n varnish-operator -l app=varnish-operator --<span class="hljs-built_in">tail</span>=50
+</code></pre>
+<h2 id="developing-the-varnish-controller-and-sidecar-images">Developing the varnish controller and sidecar images</h2>
+<p>Varnish pods can only be exercised in Kubernetes. After changing varnish-controller, varnishd, or metrics-exporter code, rebuild the relevant image and point your <code>VarnishCluster</code> at it.</p>
+<p>Build all pod images (operator image is separate):</p>
+<pre><code class="lang-bash">make docker-build-pod REPO=cinple VERSION=<span class="hljs-built_in">local</span>
+</code></pre>
+<p>This produces:</p>
+<table>
+<thead>
+<tr>
+<th>Image</th>
+<th>Dockerfile</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cinple/varnish:local</code></td>
+<td><code>Dockerfile.varnishd</code></td>
+</tr>
+<tr>
+<td><code>cinple/varnish-controller:local</code></td>
+<td><code>Dockerfile.controller</code></td>
+</tr>
+<tr>
+<td><code>cinple/varnish-metrics-exporter:local</code></td>
+<td><code>Dockerfile.exporter</code></td>
+</tr>
+</tbody>
+</table>
+<p>Override images in your <code>VarnishCluster</code> (see <a href="custom-images.html">Custom container images</a> for defaults, naming rules, and what custom images must provide):</p>
+<pre><code class="lang-yaml"><span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">varnish:</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">cinple/varnish:local</span>
+    <span class="hljs-attr">controller:</span>
+      <span class="hljs-attr">image:</span> <span class="hljs-string">cinple/varnish-controller:local</span>
+    <span class="hljs-attr">metricsExporter:</span>
+      <span class="hljs-attr">image:</span> <span class="hljs-string">cinple/varnish-metrics-exporter:local</span>
+</code></pre>
+<p>If you reuse the same tag, set <code>spec.statefulSet.container.imagePullPolicy: Always</code> and restart pods (or delete them) so Kubernetes pulls the new layers.</p>
+<p>Varnish pod images (<code>varnish</code>, <code>varnish-controller</code>, <code>varnish-metrics-exporter</code>) are based on <strong>Debian trixie</strong> and ship <strong>Varnish 9.0.3</strong> from <a href="https://packages.varnish-software.com/" target="_blank">packages.varnish-software.com</a> (see <code>docker/install-varnish-9.sh</code>). Rebuild all three together when upgrading Varnish. Override the pin with build-arg <code>VARNISH_VERSION_NUMBER</code> (default <code>9.0.3-1</code>).</p>
+<p>Release builds in CI (<code>.github/workflows/containers.yml</code>) pass the same pins explicitly (<code>VARNISH_VERSION_NUMBER</code>, <code>PROMETHEUS_VARNISH_EXPORTER_VERSION</code> in the workflow's <code>env</code> block), so published images match local/e2e builds. When bumping a pin, update it in <strong>both</strong> the <code>Makefile</code> and the workflow.</p>
+<p>Those images run as the <strong><code>varnish</code> user (UID/GID 1000)</strong> from the Varnish Software packages, not root. The StatefulSet sets <code>runAsNonRoot</code>, <code>runAsUser</code>/<code>runAsGroup</code> 1000, drops capabilities, and uses <code>fsGroup</code> 1000 on shared volumes so sidecars can read the Varnish workdir.</p>
+<pre><code class="lang-bash">docker build --build-arg VARNISH_VERSION_NUMBER=9.0.3-1 -f Dockerfile.varnishd .
+</code></pre>
+<p>The metrics exporter image accepts <code>PROMETHEUS_VARNISH_EXPORTER_VERSION</code> and <code>PROMETHEUS_VARNISH_EXPORTER_REPO</code> as build arguments (defaults: <code>v1.8.3</code> from <a href="https://github.com/otto-de/prometheus_varnish_exporter" target="_blank">otto-de/prometheus_varnish_exporter</a>):</p>
+<pre><code class="lang-bash">docker build --build-arg PROMETHEUS_VARNISH_EXPORTER_VERSION=v1.8.3 \
+  -t my-exporter:<span class="hljs-built_in">local</span> -f Dockerfile.exporter .
+</code></pre>
+<p><strong>Exporter version policy</strong> (evaluated July 2026): <strong>v1.8.3</strong> is the latest upstream release and is validated against Varnish 9.0.3 by the e2e tests, so the pin stays at v1.8.3 until upstream ships a newer release. Upstream also publishes official images at <code>ghcr.io/otto-de/prometheus-varnish-exporter</code> with coupled tags (e.g. <code>1.8.3-varnish-9.0.0</code>), but they bundle an older Varnish than this repo's images (9.0.3), so we keep building the exporter from source in <code>Dockerfile.exporter</code> against our own Varnish package pin. When bumping the exporter, re-check the metric names asserted in <code>tests/ready_pods_test.go</code> and used by the bundled Grafana dashboard.</p>
+<p>When upgrading from older Varnish images, review custom VCL for <a href="https://varnish-cache.org/docs/7.0/whats-new/upgrading-7.0.html" target="_blank">Varnish 7</a> and <a href="https://varnish-cache.org/docs/9.0/whats-new/upgrading-9.0.html" target="_blank">Varnish 9</a> release notes (PCRE2, removed APIs, etc.). Expect a cold cache after rollout; the default workdir is <code>emptyDir</code>. For a full production migration walkthrough (images, UID change, rollout strategies), see <a href="upgrading-to-varnish-9.html">Upgrading to Varnish 9</a>.</p>
+<h3 id="default-vcl-on-a-dev-cluster">Default VCL on a dev cluster</h3>
+<p><code>./hack/create_dev_cluster.sh -v</code> creates a <code>VarnishCluster</code> that references <code>vcl-config</code> / <code>entrypoint.vcl</code>. If that ConfigMap does not exist, the operator seeds the <a href="../pkg/varnishcluster/controller/varnishcluster_default_vcl.go">default VCL</a> (<code>import var</code>, <code>directors</code> round-robin backends, <code>/heartbeat</code>, <code>/liveness</code>, <code>X-Varnish-Cache</code>).</p>
+<p>Manual smoke test (after <code>-b</code> and <code>-v</code>):</p>
+<pre><code class="lang-bash"><span class="hljs-built_in">export</span> KUBECONFIG=./e2e-tests-kubeconfig
+kubectl port-forward -n varnish-cluster svc/varnishcluster-example 8080:80
+
+curl -s -o /dev/null -w <span class="hljs-string">"%{http_code}\n"</span> http://127.0.0.1:8080/heartbeat   <span class="hljs-comment"># 200</span>
+curl -s -o /dev/null -w <span class="hljs-string">"%{http_code}\n"</span> http://127.0.0.1:8080/liveness    <span class="hljs-comment"># 200</span>
+curl -sI http://127.0.0.1:8080/ | grep -i x-varnish-cache                  <span class="hljs-comment"># MISS then HIT</span>
+</code></pre>
+<p>Automated coverage: <code>go test ./tests -ginkgo.focus="operator default VCL"</code> (requires <code>make e2e-tests</code> or an equivalent cluster).</p>
+<h2 id="code-generation-and-manifests">Code generation and manifests</h2>
+<pre><code class="lang-bash">make generate   <span class="hljs-comment"># deepcopy and other generated code</span>
+make manifests  <span class="hljs-comment"># CRD + ClusterRole into varnish-operator/</span>
+make <span class="hljs-built_in">fmt</span>        <span class="hljs-comment"># goimports (pinned in ./bin/)</span>
+make vet        <span class="hljs-comment"># go vet</span>
+make lint       <span class="hljs-comment"># golangci-lint</span>
+</code></pre>
+<h2 id="kubernetes-versions-in-tests">Kubernetes versions in tests</h2>
+<p>Unit tests and end-to-end tests pin Kubernetes versions differently. <strong>Do not reuse an e2e/kind version string for envtest</strong> (or vice versa)—<code>setup-envtest use 1.35.1</code> fails with <code>unable to find archive</code> because envtest does not publish that tag.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Unit tests</th>
+<th>End-to-end tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tool</strong></td>
+<td><a href="https://book.kubebuilder.io/reference/envtest.html" target="_blank">envtest</a> via <code>setup-envtest</code></td>
+<td><a href="https://kind.sigs.k8s.io/" target="_blank">kind</a> <code>kindest/node</code> images</td>
+</tr>
+<tr>
+<td><strong>Tag format</strong></td>
+<td>Minor releases from <a href="https://github.com/kubernetes-sigs/controller-tools/releases" target="_blank">controller-tools envtest</a> (e.g. <code>1.36.0</code>, <code>1.35.0</code>, <code>1.34.1</code>)</td>
+<td>Patch tags published on Docker Hub (e.g. <code>1.35.1</code>, <code>1.34.3</code>)</td>
+</tr>
+<tr>
+<td><strong>CI versions</strong></td>
+<td><strong>1.36.0</strong> (matches <code>k8s.io/*</code> v0.36 in <code>go.mod</code>)</td>
+<td><strong>1.34.3</strong>, <strong>1.35.1</strong></td>
+</tr>
+<tr>
+<td><strong>Pick a version</strong></td>
+<td><code>setup-envtest list --platform linux/amd64</code></td>
+<td><a href="https://hub.docker.com/r/kindest/node/tags" target="_blank">kindest/node tags</a> or <code>docker pull kindest/node:vX.Y.Z</code></td>
+</tr>
+</tbody>
+</table>
+<p>Why they differ:</p>
+<ul>
+<li><strong>envtest</strong> ships pre-built API server/etcd binaries per controller-tools release. Tags are sparse (often <code>X.Y.0</code> or <code>X.Y.1</code>), and newer tags may exist before a matching kind image is published.</li>
+<li><strong>kind</strong> needs a full node OCI image. CI only uses tags that exist on Docker Hub; unreleased versions (e.g. <code>1.36.0</code> at the time of writing) require <code>kind build node-image</code> locally via <code>hack/create_dev_cluster.sh</code>.</li>
+</ul>
+<h2 id="unit-tests">Unit tests</h2>
+<p>Controller tests use envtest (a local Kubernetes API server). Install setup-envtest and point <code>KUBEBUILDER_ASSETS</code> at the binaries for an envtest release (see <a href="#kubernetes-versions-in-tests">Kubernetes versions in tests</a>):</p>
+<pre><code class="lang-bash">go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+<span class="hljs-built_in">export</span> KUBEBUILDER_ASSETS=<span class="hljs-string">"<span class="hljs-subst">$(setup-envtest use 1.36.0 -p path)</span>"</span>
+make <span class="hljs-built_in">test</span>
+</code></pre>
+<p>Without <code>KUBEBUILDER_ASSETS</code>, the envtest-based controller suite will fail to start.</p>
+<h2 id="end-to-end-tests">End-to-end tests</h2>
+<p>E2e tests create a kind cluster, build all images, install the operator from the local Helm chart, and run tests in <code>./tests</code>.</p>
+<p><strong>Recommended for full rebuilds</strong> (operator, <code>varnish</code>, <code>varnish-controller</code>, metrics exporter, or Helm chart changes):</p>
+<pre><code class="lang-bash">make e2e-tests
+</code></pre>
+<p>This runs <code>hack/create_dev_cluster.sh</code> (which <strong>deletes and recreates</strong> the <code>e2e-tests</code> kind cluster, rebuilds all pod images, loads them into kind, and installs the operator), runs tests with <code>KUBECONFIG=./e2e-tests-kubeconfig</code>, then tears the cluster down. You do not need a separate <code>helm upgrade</code> or manual StatefulSet rollout—recreating the cluster picks up new images and reconciled manifests.</p>
+<p>Use a specific Kubernetes version (must be a valid <code>kindest/node</code> tag—see <a href="#kubernetes-versions-in-tests">Kubernetes versions in tests</a>):</p>
+<pre><code class="lang-bash">KUBERNETES_VERSION=1.35.1 make e2e-tests
+</code></pre>
+<p>For versions without a pre-built <code>kindest/node</code> image, the dev script builds the node image locally with <code>kind build node-image</code>.</p>
+<p>The helper script builds images as <code>cinple/*:local</code> and sets <code>imagePullPolicy=Never</code> so kind can use locally built images.</p>
+<p>Manual workflow (same cluster setup as <code>make e2e-tests</code>, without the final teardown):</p>
+<pre><code class="lang-bash">./hack/create_dev_cluster.sh
+go <span class="hljs-built_in">test</span> ./tests   <span class="hljs-comment"># uses ./e2e-tests-kubeconfig when present (run from repo root)</span>
+./hack/delete_dev_cluster.sh
+</code></pre>
+<p><code>go test ./tests</code> alone (without a cluster or kubeconfig) fails immediately. Either use <code>make e2e-tests</code>, or run <code>create_dev_cluster.sh</code> first so <code>./e2e-tests-kubeconfig</code> exists and the kind cluster <code>e2e-tests</code> is up with the operator installed. You can still set <code>KUBECONFIG</code> explicitly if the file lives elsewhere.</p>
+<p>Optional flags for <code>create_dev_cluster.sh</code> (when not using the full <code>make e2e-tests</code> target):</p>
+<ul>
+<li><code>-s</code> — skip Docker build (images must already exist locally; cluster is still recreated)</li>
+<li><code>-v</code> — create a sample <code>VarnishCluster</code></li>
+<li><code>-b</code> — create nginx backend deployments</li>
+</ul>
+<p>CI runs e2e against Kubernetes <strong>1.34.3</strong> and <strong>1.35.1</strong> (see <a href="#kubernetes-versions-in-tests">Kubernetes versions in tests</a>).</p>
+<h2 id="documentation-site">Documentation site</h2>
+<p>The GitHub Pages site is built with <a href="https://github.com/honkit/honkit" target="_blank">HonKit</a> (a maintained fork of legacy GitBook). Sources live under <code>docs/</code>; CI runs <code>npm ci</code> and <code>npm run build</code> in that directory and publishes <code>docs_generated/</code> to the <code>gh-pages</code> branch.</p>
+<p>Requires <strong>Node.js 20+</strong> (<code>docs/package.json</code> <code>engines</code>, <code>docs/.nvmrc</code>).</p>
+<pre><code class="lang-bash"><span class="hljs-built_in">cd</span> docs
+nvm install &amp;&amp; nvm use   <span class="hljs-comment"># if using nvm</span>
+npm ci
+npm run build    <span class="hljs-comment"># writes ../docs_generated/</span>
+npm run serve    <span class="hljs-comment"># local preview at http://localhost:4000</span>
+</code></pre>
+<h2 id="operatorhub-bundle-generation">OperatorHub bundle generation</h2>
+<p>Bundles are generated with <a href="https://sdk.operatorframework.io/" target="_blank">operator-sdk</a>. Source manifests live under <code>config/</code> (CRD, RBAC, samples, ClusterServiceVersion).</p>
+<pre><code class="lang-bash"><span class="hljs-comment"># Semver bundle version; use any tag for the container image</span>
+VERSION=0.37.0 make bundle
+
+<span class="hljs-comment"># Local/dev image tag maps to bundle version 0.0.0-local</span>
+VERSION=<span class="hljs-built_in">local</span> make bundle
+</code></pre>
+<p>Output is written to <code>./$(VERSION)/</code> (for example <code>./local/</code>). The target validates the bundle, copies <code>Dockerfile.bundle</code>, and replaces any previous output directory with the same name.</p>
+<p>Review the generated manifests before publishing. Bundles can be tested with the <a href="https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md" target="_blank">community-operators testing guide</a>.</p>
+<h2 id="useful-makefile-variables">Useful Makefile variables</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VERSION</code></td>
+<td><code>local</code></td>
+<td>Image tag suffix</td>
+</tr>
+<tr>
+<td><code>REPO</code></td>
+<td><code>cinple</code></td>
+<td>Container registry / namespace prefix</td>
+</tr>
+<tr>
+<td><code>NAMESPACE</code></td>
+<td><code>default</code></td>
+<td>Namespace for <code>make run</code> and <code>helm-upgrade</code></td>
+</tr>
+<tr>
+<td><code>PLATFORM</code></td>
+<td><code>linux/amd64</code></td>
+<td>Docker build platform</td>
+</tr>
+</tbody>
+</table>
+<p>Examples:</p>
+<pre><code class="lang-bash">make docker-build REPO=myregistry VERSION=dev
+make run NAMESPACE=varnish-operator REPO=myregistry
+</code></pre>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="architecture.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: Architecture">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Development","level":"1.13","depth":1,"previous":{"title":"Architecture","level":"1.12","depth":1,"path":"architecture.md","ref":"architecture.md","articles":[]},"dir":"ltr"},"config":{"plugins":["hints"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"hints":{"info":"fa fa-info-circle","tip":"fa fa-mortar-board","danger":"fa fa-exclamation-circle","working":"fa fa-wrench"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56},"embedFonts":false},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"Varnish Operator Docs","gitbook":"*"},"file":{"path":"development.md","mtime":"2026-07-18T01:45:31.714Z","type":"markdown"},"gitbook":{"version":"6.2.2","time":"2026-07-18T01:45:39.768Z"},"basePath":".","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <noscript>
+        <style>
+            .honkit-cloak {
+                display: block !important;
+            }
+        </style>
+    </noscript>
+    <script>
+        // Restore sidebar state as critical path for prevent layout shift
+        function __init__getSidebarState(defaultValue){
+            var baseKey = "";
+            var key = baseKey + ":sidebar";
+            try {
+                var value = localStorage[key];
+                if (value === undefined) {
+                    return defaultValue;
+                }
+                var parsed = JSON.parse(value);
+                return parsed == null ? defaultValue : parsed;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        function __init__restoreLastSidebarState() {
+            var isMobile = window.matchMedia("(max-width: 600px)").matches;
+            if (isMobile) {
+                // Init last state if not mobile
+                return;
+            }
+            var sidebarState = __init__getSidebarState(true);
+            var book = document.querySelector(".book");
+            // Show sidebar if it enabled
+            if (sidebarState && book) {
+                book.classList.add("without-animation", "with-summary");
+            }
+        }
+
+        try {
+            __init__restoreLastSidebarState();
+        } finally {
+            var book = document.querySelector(".book");
+            book.classList.remove("honkit-cloak");
+        }
+    </script>
+    <script src="gitbook/gitbook.js"></script>
+    <script src="gitbook/theme.js"></script>
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="gitbook/@honkit/honkit-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
