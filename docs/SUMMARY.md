@@ -7,6 +7,7 @@
 * [VarnishCluster](varnish-cluster.md)
 * [VarnishCluster Configuration](varnish-cluster-configuration.md)
 * [Custom container images](custom-images.md)
+* [Upgrading to Varnish 9](upgrading-to-varnish-9.md)
 * [VCL Configuration](vcl-configuration.md)
 * [Monitoring](monitoring.md)
 * [Debugging Issues](debugging-issues.md)

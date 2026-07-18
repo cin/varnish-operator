@@ -52,7 +52,7 @@ See the [VCL files configuration](vcl-configuration.md) section for more details
 
 * Ability to manage Varnish instances in a Kubernetes native way 
 * Deploying Varnish directly as a Deployment into Kubernetes is not immediately useful because the VCL has to know about the backend hosts. Those host names (or IP addresses) need to be stable in order to keep the VCL valid, but that's not possible due to dynamic nature of Kubernetes. The only obvious way to get a stable hostname (IP address) is via a Kubernetes Service, but that Service already acts as a load balancer to the Deployment it backs, which means undefined behavior from the Varnish perspective, and adds an extra network hop. Thus, trying to use Varnish in a regular deployment is unproductive.
-* Support of different directors for backends. If you expose your backends to Varnish as a Kubernetes service you can have only round-robin load balancing. Since the operator works with backends at the pod level, you can use different directors supported by Varnish ([random](https://varnish-cache.org/docs/5.1/reference/vmod_directors.generated.html#obj-random), [fallback](https://varnish-cache.org/docs/5.1/reference/vmod_directors.generated.html#obj-fallback))
+* Support of different directors for backends. If you expose your backends to Varnish as a Kubernetes service you can have only round-robin load balancing. Since the operator works with backends at the pod level, you can use different directors supported by Varnish ([random](https://varnish-cache.org/docs/9.0/reference/vmod_directors.html#directors-random), [fallback](https://varnish-cache.org/docs/9.0/reference/vmod_directors.html#directors-fallback))
 * You can't build a sharded Varnish cluster due to the dynamic nature of Kubernetes and the requirement to know about each Varnish peer (pod) in order to build the VCL.
 
 ### Further reading
@@ -60,6 +60,7 @@ See the [VCL files configuration](vcl-configuration.md) section for more details
 * [Quickstart](quick-start.md)
 * [VarnishCluster configuration](varnish-cluster-configuration.md)
 * [Custom container images](custom-images.md)
+* [Upgrading to Varnish 9](upgrading-to-varnish-9.md)
 * [Varnish operator configuration](operator-configuration.md)
 * [VCL files configuration](vcl-configuration.md)
 * [Contribution](development.md)

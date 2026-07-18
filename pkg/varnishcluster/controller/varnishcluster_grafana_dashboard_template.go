@@ -379,7 +379,7 @@ var grafanaDashboardTemplate = `
           "interval": "15s",
           "intervalFactor": 1,
           "legendFormat": "",
-          "metric": "varnish_main_backend_req",
+          "metric": "varnish_main_cache_hit",
           "refId": "A",
           "step": 900
         }
@@ -632,13 +632,13 @@ var grafanaDashboardTemplate = `
         "lineColor": "rgb(31, 120, 193)",
         "show": false
       },
-      "tableColumn": "version",
+      "tableColumn": "",
       "targets": [
         {
           "expr": "varnish_version{service=\"{{.ServiceName}}\", pod=~\"^$varnish_pod$\", namespace=\"{{.Namespace}}\"}",
-          "format": "table",
+          "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "",
+          "legendFormat": "{{"{{version}}"}}",
           "refId": "A",
           "step": 1800
         }
@@ -655,7 +655,7 @@ var grafanaDashboardTemplate = `
           "value": "null"
         }
       ],
-      "valueName": "current"
+      "valueName": "name"
     },
     {
       "collapsed": false,

@@ -43,7 +43,7 @@ The chart is not a complete solution and intended to be modified to the end user
 
 ## Varnish Monitoring
 
-Each Varnish pod has a [Varnish Prometheus metrics exporter](https://github.com/otto-de/prometheus_varnish_exporter) built-in. They exporter port is exposed by the `VarnishCluster` on port `9131` by default. It can be changed by setting the `spec.service.prometheusExporterPort` field in the [`VarnishCluster` spec](varnish-cluster-configuration.md).
+Each Varnish pod has a [Varnish Prometheus metrics exporter](https://github.com/otto-de/prometheus_varnish_exporter) built-in. The exporter port is exposed by the `VarnishCluster` on port `9131` by default. It can be changed by setting the `spec.service.metricsPort` field in the [`VarnishCluster` spec](varnish-cluster-configuration.md).
 
 The service port can be used to setup metrics scraping using [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator) `ServiceMonitor`.  
 
@@ -52,6 +52,16 @@ The pods itself also expose metrics on port `9131`.
 There are also metrics exposed by the Varnish controller on a different port. You'll have to setup your ServiceMonitor to scrape metrics from the port 8235 (or refer by its name `ctrl-metrics` 
 
 One of the metrics can be used to setup alerts when the provided VCL failed to compile. It's called `varnish_vcl_compilation_error` and has the value `0` if the last compilation attempt was successful or `1` in case of failure.
+
+### Bundled Grafana dashboard prerequisites
+
+The operator can install a per-`VarnishCluster` Grafana dashboard (`spec.monitoring.grafanaDashboard`, disabled by default). Its panels filter on the `service`, `pod`, and `namespace` labels that Prometheus attaches when scraping through a `ServiceMonitor` — the raw exporter output (`curl <pod>:9131/metrics`) does not contain them. For the dashboard to show data out of the box you need:
+
+* **Prometheus Operator** with a Prometheus instance selecting the cluster's ServiceMonitor. The easiest way is enabling `spec.monitoring.prometheusServiceMonitor` and setting `.labels` to match your Prometheus `serviceMonitorSelector`.
+* **Grafana dashboard discovery** picking up the dashboard ConfigMap. With the [Grafana Helm chart](https://github.com/grafana/helm-charts/tree/main/charts/grafana) sidecar, the ConfigMap's default `grafana_dashboard: "1"` label matches the default sidecar config; override via `spec.monitoring.grafanaDashboard.labels` if yours differs.
+* **A matching datasource name**: `spec.monitoring.grafanaDashboard.datasourceName` must equal the name of the Prometheus datasource in Grafana (case-sensitive), otherwise all panels show "no data".
+
+If panels are empty but `kubectl exec <pod> -c varnish-metrics-exporter -- wget -qO- localhost:9131/metrics` returns metrics, check that Prometheus actually scrapes the ServiceMonitor target and that queries like `varnish_up{service="<varnishcluster-name>"}` return series in the Grafana Explore view.
 
 ### VarnishCluster with Monitoring Stack Example
 

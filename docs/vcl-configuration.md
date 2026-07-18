@@ -79,7 +79,7 @@ These are the available fields in the template that can be used to build your VC
   * `.Weight` - `float64`: backend weight
   {% hint style="info" %}
   Please note that only the Random director can accept Weight as backend parameter
-  [Random director documentation](https://varnish-cache.org/docs/6.1/reference/vmod_directors.generated.html?highlight=round%20robin#void-xrandom-add-backend-backend-real)
+  [Random director documentation](https://varnish-cache.org/docs/9.0/reference/vmod_directors.html#xrandom-add-backend)
   For more information regarding weight control see [VarnishCluster](varnish-cluster.md)
   {% endhint %}
 * `.TargetPort` - `int`: port that is exposed on the backends
@@ -220,7 +220,7 @@ As the logs indicate, the issue here is the invalid VCL syntax.
 
 ### Passing additional information into VCL
 
-The `VarnishCluster` spec has a field `.spec.varnish.envFrom` that allows injecting custom values into env vars. After defining, in VCL files you can read them using [std.getenv()](https://varnish-cache.org/docs/5.1/reference/vmod_std.generated.html#func-getenv) function. Bot Secrets and ConfigMaps can be used to do it.
+The `VarnishCluster` spec has a field `.spec.varnish.envFrom` that allows injecting custom values into env vars. After defining, in VCL files you can read them using [std.getenv()](https://varnish-cache.org/docs/9.0/reference/vmod_std.html#std-getenv) function. Bot Secrets and ConfigMaps can be used to do it.
 
 Example of injecting values from a Secret:
 

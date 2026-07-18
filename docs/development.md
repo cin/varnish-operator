@@ -143,6 +143,8 @@ If you reuse the same tag, set `spec.statefulSet.container.imagePullPolicy: Alwa
 
 Varnish pod images (`varnish`, `varnish-controller`, `varnish-metrics-exporter`) are based on **Debian trixie** and ship **Varnish 9.0.3** from [packages.varnish-software.com](https://packages.varnish-software.com/) (see `docker/install-varnish-9.sh`). Rebuild all three together when upgrading Varnish. Override the pin with build-arg `VARNISH_VERSION_NUMBER` (default `9.0.3-1`).
 
+Release builds in CI (`.github/workflows/containers.yml`) pass the same pins explicitly (`VARNISH_VERSION_NUMBER`, `PROMETHEUS_VARNISH_EXPORTER_VERSION` in the workflow's `env` block), so published images match local/e2e builds. When bumping a pin, update it in **both** the `Makefile` and the workflow.
+
 Those images run as the **`varnish` user (UID/GID 1000)** from the Varnish Software packages, not root. The StatefulSet sets `runAsNonRoot`, `runAsUser`/`runAsGroup` 1000, drops capabilities, and uses `fsGroup` 1000 on shared volumes so sidecars can read the Varnish workdir.
 
 ```bash
@@ -156,7 +158,9 @@ docker build --build-arg PROMETHEUS_VARNISH_EXPORTER_VERSION=v1.8.3 \
   -t my-exporter:local -f Dockerfile.exporter .
 ```
 
-When upgrading from older Varnish images, review custom VCL for [Varnish 7](https://varnish-cache.org/docs/7.0/whats-new/upgrading-7.0.html) and [Varnish 9](https://varnish-cache.org/docs/9.0/whats-new/upgrading-9.0.html) release notes (PCRE2, removed APIs, etc.). Expect a cold cache after rollout; the default workdir is `emptyDir`.
+**Exporter version policy** (evaluated July 2026): **v1.8.3** is the latest upstream release and is validated against Varnish 9.0.3 by the e2e tests, so the pin stays at v1.8.3 until upstream ships a newer release. Upstream also publishes official images at `ghcr.io/otto-de/prometheus-varnish-exporter` with coupled tags (e.g. `1.8.3-varnish-9.0.0`), but they bundle an older Varnish than this repo's images (9.0.3), so we keep building the exporter from source in `Dockerfile.exporter` against our own Varnish package pin. When bumping the exporter, re-check the metric names asserted in `tests/ready_pods_test.go` and used by the bundled Grafana dashboard.
+
+When upgrading from older Varnish images, review custom VCL for [Varnish 7](https://varnish-cache.org/docs/7.0/whats-new/upgrading-7.0.html) and [Varnish 9](https://varnish-cache.org/docs/9.0/whats-new/upgrading-9.0.html) release notes (PCRE2, removed APIs, etc.). Expect a cold cache after rollout; the default workdir is `emptyDir`. For a full production migration walkthrough (images, UID change, rollout strategies), see [Upgrading to Varnish 9](upgrading-to-varnish-9.md).
 
 ### Default VCL on a dev cluster
 
