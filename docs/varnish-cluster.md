@@ -105,8 +105,8 @@ $ varnishadm -T example-varnish-0.example-headless-service.default.svc.cluster.l
 -----------------------------
 Varnish Cache CLI 1.0
 -----------------------------
-Linux,5.8.0-45-generic,x86_64,-jnone,-sdefault,-sdefault,-hcritbit
-varnish-6.1.1 revision efc2f6c1536cf2272e471f5cff5f145239b19460
+Linux,6.6.0-generic,x86_64,-junix,-sdefault,-sdefault,-hcritbit
+varnish-9.0.3 revision <build revision>
 
 Type 'help' for command list.
 Type 'quit' to close CLI session.

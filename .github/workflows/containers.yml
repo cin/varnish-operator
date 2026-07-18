@@ -8,6 +8,12 @@ on:
     branches-ignore:
       - gh-pages
 
+# Keep these pins in sync with the Makefile (VARNISH_VERSION_NUMBER,
+# PROMETHEUS_VARNISH_EXPORTER_VERSION) so release images match dev/e2e builds.
+env:
+  VARNISH_VERSION_NUMBER: 9.0.3-1
+  PROMETHEUS_VARNISH_EXPORTER_VERSION: v1.8.3
+
 jobs:
   operator:
     runs-on: ubuntu-latest
@@ -52,6 +58,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ github.event_name == 'release' && format('{0}/varnish:{1}', secrets.DOCKERHUB_REPO, steps.get_version.outputs.VERSION) || format('varnish:{0}', steps.get_version.outputs.VERSION) }}
           file: ./Dockerfile.varnishd
+          build-args: |
+            VARNISH_VERSION_NUMBER=${{ env.VARNISH_VERSION_NUMBER }}
           push: ${{ github.event_name == 'release' && github.event.action == 'created' }}
   varnish-controller:
     runs-on: ubuntu-latest
@@ -75,6 +83,7 @@ jobs:
           file: ./Dockerfile.controller
           build-args: |
             VERSION=${{ steps.get_version.outputs.VERSION }}
+            VARNISH_VERSION_NUMBER=${{ env.VARNISH_VERSION_NUMBER }}
           push: ${{ github.event_name == 'release' && github.event.action == 'created' }}
   varnish-metrics-exporter:
     runs-on: ubuntu-latest
@@ -96,4 +105,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ github.event_name == 'release' && format('{0}/varnish-metrics-exporter:{1}', secrets.DOCKERHUB_REPO, steps.get_version.outputs.VERSION) || format('varnish-metrics-exporter:{0}', steps.get_version.outputs.VERSION) }}
           file: ./Dockerfile.exporter
+          build-args: |
+            VARNISH_VERSION_NUMBER=${{ env.VARNISH_VERSION_NUMBER }}
+            PROMETHEUS_VARNISH_EXPORTER_VERSION=${{ env.PROMETHEUS_VARNISH_EXPORTER_VERSION }}
           push: ${{ github.event_name == 'release' && github.event.action == 'created' }}

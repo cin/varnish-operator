@@ -101,15 +101,15 @@ In another terminal, use `curl` to make a request to Varnish (use `-i` flag to s
 ```bash
 $ curl -i localhost:8080/
   HTTP/1.1 200 OK
-  Server: nginx/1.17.0
-  Date: Tue, 11 Jun 2019 13:55:16 GMT
+  Server: nginx/1.27.0
+  Date: Fri, 17 Jul 2026 13:55:16 GMT
   Content-Type: text/html
-  Content-Length: 612
-  Last-Modified: Tue, 21 May 2019 14:23:57 GMT
+  Content-Length: 615
+  Last-Modified: Tue, 21 May 2026 14:23:57 GMT
   ETag: "5ce409fd-264"
   X-Varnish: 32770 12
   Age: 41
-  Via: 1.1 varnish (Varnish/6.0)
+  Via: 1.1 varnishcluster-example-varnish-0 (Varnish/9.0)
   grace: 
   X-Varnish-Cache: HIT
   Accept-Ranges: bytes
@@ -144,7 +144,7 @@ $ curl -i localhost:8080/
 
 You should see nginx's welcome page. 
 
-`Server: nginx/1.17.0` header shows your backend response header and `Via: 1.1 varnish (Varnish/6.1.1)` indicates that the request has been passed through Varnish.
+The `Server: nginx/...` header shows your backend response header and `Via: 1.1 varnishcluster-example-varnish-0 (Varnish/9.0)` indicates that the request has been passed through Varnish (since Varnish 7 the `Via` header includes the server identity, which defaults to the pod hostname).
 
 ## What's next
 
