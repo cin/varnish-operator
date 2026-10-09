@@ -1,0 +1,18 @@
+{
+  "name": "varnish-operator-docs",
+  "private": true,
+  "description": "HonKit build for Varnish Operator documentation",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "prebuild": "node scripts/check-node.js",
+    "preserve": "node scripts/check-node.js",
+    "build": "honkit build . ../docs_generated",
+    "serve": "honkit serve ."
+  },
+  "devDependencies": {
+    "gitbook-plugin-hints": "^1.0.2",
+    "honkit": "^6.2.2"
+  }
+}
